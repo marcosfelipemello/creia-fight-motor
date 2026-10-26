@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="pt-BR" data-resolution="landscape">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1920, height=1080" />
+  <title>Creia Fight — Abertura</title>
+  <script src="assets/vendor/gsap.min.js"></script>
+  <style>*{box-sizing:border-box;margin:0}html,body{width:1920px;height:1080px;overflow:hidden;background:#000}</style>
+</head>
+<body>
+  <div id="root" data-composition-id="main" data-start="0" data-duration="16.5" data-fps="30" data-width="1920" data-height="1080">
+    <div id="abre" class="clip" data-composition-id="abre" data-composition-src="compositions/abre.html" data-start="0" data-duration="2.635" data-track-index="0" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+    <div id="elenco" class="clip" data-composition-id="elenco" data-composition-src="compositions/elenco.html" data-start="2.635" data-duration="9.101" data-track-index="0" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+    <div id="fim" class="clip" data-composition-id="fim" data-composition-src="compositions/fim.html" data-start="11.736" data-duration="4.764" data-track-index="0" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+    <audio id="musica" src="assets/musica.m4a" data-start="0" data-duration="16.5" data-track-index="1" data-volume="1" data-fade-out="1.4"></audio>
+  </div>
+  <script>
+    window.__timelines = window.__timelines || {};
+    window.__timelines['main'] = gsap.timeline({ paused: true });
+  </script>
+</body>
+</html>

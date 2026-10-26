@@ -1,0 +1,5 @@
+Oswald e Karla: fontes distribuídas sob SIL Open Font License 1.1.
+https://openfontlicense.org/open-font-license-official-text/
+Oswald: https://github.com/googlefonts/OswaldFont
+Karla: https://github.com/googlefonts/karla
+Arquivos existentes reutilizados de /root/projetos/agenda/deploy/public/fontes/.

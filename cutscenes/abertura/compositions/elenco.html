@@ -1,0 +1,381 @@
+<template>
+  <style>@font-face{font-family:'Press Start 2P';src:url('assets/fonts/PressStart2P.woff2') format('woff2')}
+@font-face{font-family:'OswaldLocal';src:url('assets/fonts/Oswald.woff2') format('woff2');font-weight:200 700}
+    #root{position:absolute;inset:0;overflow:hidden;background:#000}
+    .card{position:absolute;inset:0;overflow:hidden;background:radial-gradient(ellipse at 72% 55%,color-mix(in srgb,var(--cor) 100%,#fff 18%),var(--cor) 45%,color-mix(in srgb,var(--cor) 45%,#000) 100%)}
+    .linhas{position:absolute;top:0;left:0;width:4000px;height:1080px;background:repeating-linear-gradient(100deg,rgba(255,255,255,.16) 0 5px,transparent 5px 70px,rgba(0,0,0,.12) 70px 74px,transparent 74px 150px)}
+    .faixa{position:absolute;left:-200px;top:0;width:1300px;height:1080px;background:rgba(8,6,14,.88);transform:skewX(-12deg);border-right:14px solid var(--cor)}
+    .lutador{position:absolute;right:120px;bottom:20px;height:980px;width:auto;image-rendering:auto;transform-origin:50% 100%;filter:drop-shadow(18px 0 0 rgba(0,0,0,.35))}
+    .num{position:absolute;left:120px;top:110px;font:28px/1 'Press Start 2P',monospace;color:rgba(255,255,255,.55)}
+    .job{position:absolute;left:120px;top:430px;font:34px/1 'Press Start 2P',monospace;color:var(--cor);filter:brightness(1.25)}
+    .nome{position:absolute;left:112px;top:490px;width:1080px;font:700 150px/1 OswaldLocal,sans-serif;white-space:nowrap;color:#fff;text-transform:uppercase;text-shadow:8px 8px 0 #000}
+    .esp{position:absolute;left:120px;top:700px;width:840px;font:28px/1.5 'Press Start 2P',monospace;color:#f6c16a}
+    .flash{position:absolute;inset:0;background:#fff;opacity:0}
+  </style>
+  <div id="root" data-composition-id="elenco" data-width="1920" data-height="1080">
+    <div id="el-bispo" class="card clip" data-start="0" data-duration="0.414" style="--cor:#e85d04" data-layout-allow-overlap data-layout-allow-overflow>
+      <div class="linhas" id="el-bispo-linhas"></div>
+      <div class="faixa" id="el-bispo-faixa"></div>
+      <img class="lutador" id="el-bispo-img" src="assets/elenco/bispo_special.png" alt="">
+      <div class="num">#01</div>
+      <div class="job" id="el-bispo-job">BISPO</div>
+      <div class="nome" id="el-bispo-nome">BISPO ANDRÉ</div>
+      <div class="esp" id="el-bispo-esp">ESPECIAL: INDESCULPÁVEIS!</div>
+      <div class="flash" id="el-bispo-flash"></div>
+    </div>
+    <div id="el-lutador" class="card clip" data-start="0.414" data-duration="0.827" style="--cor:#d62828" data-layout-allow-overlap data-layout-allow-overflow>
+      <div class="linhas" id="el-lutador-linhas"></div>
+      <div class="faixa" id="el-lutador-faixa"></div>
+      <img class="lutador" id="el-lutador-img" src="assets/elenco/lutador_special.png" alt="">
+      <div class="num">#02</div>
+      <div class="job" id="el-lutador-job">LUTADOR</div>
+      <div class="nome" id="el-lutador-nome">MARCOS FELIPE</div>
+      <div class="esp" id="el-lutador-esp">ESPECIAL: SOLO DE GUITARRA</div>
+      <div class="flash" id="el-lutador-flash"></div>
+    </div>
+    <div id="el-nutri" class="card clip" data-start="1.241" data-duration="0.827" style="--cor:#ff4f9a" data-layout-allow-overlap data-layout-allow-overflow>
+      <div class="linhas" id="el-nutri-linhas"></div>
+      <div class="faixa" id="el-nutri-faixa"></div>
+      <img class="lutador" id="el-nutri-img" src="assets/elenco/nutri_special.png" alt="">
+      <div class="num">#03</div>
+      <div class="job" id="el-nutri-job">NUTRICIONISTA</div>
+      <div class="nome" id="el-nutri-nome">LORRANY</div>
+      <div class="esp" id="el-nutri-esp">ESPECIAL: RESTRIÇÃO ALIMENTAR, LOW CARB!</div>
+      <div class="flash" id="el-nutri-flash"></div>
+    </div>
+    <div id="el-emanuelly" class="card clip" data-start="2.069" data-duration="0.414" style="--cor:#e9b616" data-layout-allow-overlap data-layout-allow-overflow>
+      <div class="linhas" id="el-emanuelly-linhas"></div>
+      <div class="faixa" id="el-emanuelly-faixa"></div>
+      <img class="lutador" id="el-emanuelly-img" src="assets/elenco/emanuelly_special.png" alt="">
+      <div class="num">#04</div>
+      <div class="job" id="el-emanuelly-job">ESTUDANTE</div>
+      <div class="nome" id="el-emanuelly-nome">EMANUELLY</div>
+      <div class="esp" id="el-emanuelly-esp">ESPECIAL: REDAÇÃO NOTA MIL</div>
+      <div class="flash" id="el-emanuelly-flash"></div>
+    </div>
+    <div id="el-enzo" class="card clip" data-start="2.482" data-duration="0.414" style="--cor:#ff7a1a" data-layout-allow-overlap data-layout-allow-overflow>
+      <div class="linhas" id="el-enzo-linhas"></div>
+      <div class="faixa" id="el-enzo-faixa"></div>
+      <img class="lutador" id="el-enzo-img" src="assets/elenco/enzo_special.png" alt="">
+      <div class="num">#05</div>
+      <div class="job" id="el-enzo-job">BASQUETE E MÚSICA</div>
+      <div class="nome" id="el-enzo-nome">ENZO GABRIEL</div>
+      <div class="esp" id="el-enzo-esp">ESPECIAL: CHUVA DE BASQUETE</div>
+      <div class="flash" id="el-enzo-flash"></div>
+    </div>
+    <div id="el-pedro" class="card clip" data-start="2.896" data-duration="0.414" style="--cor:#7b4dff" data-layout-allow-overlap data-layout-allow-overflow>
+      <div class="linhas" id="el-pedro-linhas"></div>
+      <div class="faixa" id="el-pedro-faixa"></div>
+      <img class="lutador" id="el-pedro-img" src="assets/elenco/pedro_special.png" alt="">
+      <div class="num">#06</div>
+      <div class="job" id="el-pedro-job">TECLADISTA</div>
+      <div class="nome" id="el-pedro-nome" style="font-size:112px">PEDRO GUILHERME</div>
+      <div class="esp" id="el-pedro-esp">ESPECIAL: HARMONIA BIZARRAMENTE TORTA</div>
+      <div class="flash" id="el-pedro-flash"></div>
+    </div>
+    <div id="el-naju" class="card clip" data-start="3.31" data-duration="0.414" style="--cor:#13a596" data-layout-allow-overlap data-layout-allow-overflow>
+      <div class="linhas" id="el-naju-linhas"></div>
+      <div class="faixa" id="el-naju-faixa"></div>
+      <img class="lutador" id="el-naju-img" src="assets/elenco/naju_special.png" alt="">
+      <div class="num">#07</div>
+      <div class="job" id="el-naju-job">CANTORA</div>
+      <div class="nome" id="el-naju-nome">NAJU</div>
+      <div class="esp" id="el-naju-esp">ESPECIAL: GRITO NO MICROFONE</div>
+      <div class="flash" id="el-naju-flash"></div>
+    </div>
+    <div id="el-grazi" class="card clip" data-start="3.723" data-duration="0.414" style="--cor:#ff3d7f" data-layout-allow-overlap data-layout-allow-overflow>
+      <div class="linhas" id="el-grazi-linhas"></div>
+      <div class="faixa" id="el-grazi-faixa"></div>
+      <img class="lutador" id="el-grazi-img" src="assets/elenco/grazi_special.png" alt="">
+      <div class="num">#08</div>
+      <div class="job" id="el-grazi-job">PROFESSORA</div>
+      <div class="nome" id="el-grazi-nome">GRAZI</div>
+      <div class="esp" id="el-grazi-esp">ESPECIAL: VÃO, MINHAS CRIANÇAS!</div>
+      <div class="flash" id="el-grazi-flash"></div>
+    </div>
+    <div id="el-lohan" class="card clip" data-start="4.137" data-duration="0.414" style="--cor:#2bb24c" data-layout-allow-overlap data-layout-allow-overflow>
+      <div class="linhas" id="el-lohan-linhas"></div>
+      <div class="faixa" id="el-lohan-faixa"></div>
+      <img class="lutador" id="el-lohan-img" src="assets/elenco/lohan_special.png" alt="">
+      <div class="num">#09</div>
+      <div class="job" id="el-lohan-job">FOTÓGRAFO</div>
+      <div class="nome" id="el-lohan-nome">LOHAN</div>
+      <div class="esp" id="el-lohan-esp">ESPECIAL: SUPER FLASH</div>
+      <div class="flash" id="el-lohan-flash"></div>
+    </div>
+    <div id="el-rafinha" class="card clip" data-start="4.551" data-duration="0.414" style="--cor:#f4a300" data-layout-allow-overlap data-layout-allow-overflow>
+      <div class="linhas" id="el-rafinha-linhas"></div>
+      <div class="faixa" id="el-rafinha-faixa"></div>
+      <img class="lutador" id="el-rafinha-img" src="assets/elenco/rafinha_special.png" alt="">
+      <div class="num">#10</div>
+      <div class="job" id="el-rafinha-job">BATERISTA</div>
+      <div class="nome" id="el-rafinha-nome">RAFINHA</div>
+      <div class="esp" id="el-rafinha-esp">ESPECIAL: CHUVA DE PRATO</div>
+      <div class="flash" id="el-rafinha-flash"></div>
+    </div>
+    <div id="el-douglas" class="card clip" data-start="4.964" data-duration="0.414" style="--cor:#9b5de5" data-layout-allow-overlap data-layout-allow-overflow>
+      <div class="linhas" id="el-douglas-linhas"></div>
+      <div class="faixa" id="el-douglas-faixa"></div>
+      <img class="lutador" id="el-douglas-img" src="assets/elenco/douglas_special.png" alt="">
+      <div class="num">#11</div>
+      <div class="job" id="el-douglas-job">CAVAQUINISTA</div>
+      <div class="nome" id="el-douglas-nome">DOUGLAS FEIJÓ</div>
+      <div class="esp" id="el-douglas-esp">ESPECIAL: FARMAR AURA</div>
+      <div class="flash" id="el-douglas-flash"></div>
+    </div>
+    <div id="el-fidelis" class="card clip" data-start="5.378" data-duration="0.414" style="--cor:#1e88e5" data-layout-allow-overlap data-layout-allow-overflow>
+      <div class="linhas" id="el-fidelis-linhas"></div>
+      <div class="faixa" id="el-fidelis-faixa"></div>
+      <img class="lutador" id="el-fidelis-img" src="assets/elenco/fidelis_special.png" alt="">
+      <div class="num">#12</div>
+      <div class="job" id="el-fidelis-job">GAMER</div>
+      <div class="nome" id="el-fidelis-nome">FIDELIS</div>
+      <div class="esp" id="el-fidelis-esp">ESPECIAL: INVERSÃO DE ACORDE</div>
+      <div class="flash" id="el-fidelis-flash"></div>
+    </div>
+    <div id="el-arthur" class="card clip" data-start="5.792" data-duration="0.414" style="--cor:#e63946" data-layout-allow-overlap data-layout-allow-overflow>
+      <div class="linhas" id="el-arthur-linhas"></div>
+      <div class="faixa" id="el-arthur-faixa"></div>
+      <img class="lutador" id="el-arthur-img" src="assets/elenco/arthur_special.png" alt="">
+      <div class="num">#13</div>
+      <div class="job" id="el-arthur-job">CANTOR</div>
+      <div class="nome" id="el-arthur-nome">ARTHUR</div>
+      <div class="esp" id="el-arthur-esp">ESPECIAL: VÁ ESTUDAR</div>
+      <div class="flash" id="el-arthur-flash"></div>
+    </div>
+    <div id="el-lucas" class="card clip" data-start="6.206" data-duration="0.414" style="--cor:#6fae1c" data-layout-allow-overlap data-layout-allow-overflow>
+      <div class="linhas" id="el-lucas-linhas"></div>
+      <div class="faixa" id="el-lucas-faixa"></div>
+      <img class="lutador" id="el-lucas-img" src="assets/elenco/lucas_special.png" alt="">
+      <div class="num">#14</div>
+      <div class="job" id="el-lucas-job">CREIACAST</div>
+      <div class="nome" id="el-lucas-nome">LUCAS GARCIA</div>
+      <div class="esp" id="el-lucas-esp">ESPECIAL: PORCOS NA SALA!</div>
+      <div class="flash" id="el-lucas-flash"></div>
+    </div>
+    <div id="el-duda" class="card clip" data-start="6.619" data-duration="0.414" style="--cor:#ff70a6" data-layout-allow-overlap data-layout-allow-overflow>
+      <div class="linhas" id="el-duda-linhas"></div>
+      <div class="faixa" id="el-duda-faixa"></div>
+      <img class="lutador" id="el-duda-img" src="assets/elenco/duda_special.png" alt="">
+      <div class="num">#15</div>
+      <div class="job" id="el-duda-job">CANTORA</div>
+      <div class="nome" id="el-duda-nome">DUDA SOUZA</div>
+      <div class="esp" id="el-duda-esp">ESPECIAL: CORAM DEO</div>
+      <div class="flash" id="el-duda-flash"></div>
+    </div>
+    <div id="el-adriene" class="card clip" data-start="7.033" data-duration="0.414" style="--cor:#b5651d" data-layout-allow-overlap data-layout-allow-overflow>
+      <div class="linhas" id="el-adriene-linhas"></div>
+      <div class="faixa" id="el-adriene-faixa"></div>
+      <img class="lutador" id="el-adriene-img" src="assets/elenco/adriene_special.png" alt="">
+      <div class="num">#16</div>
+      <div class="job" id="el-adriene-job">CONFEITEIRA</div>
+      <div class="nome" id="el-adriene-nome">ADRIENE</div>
+      <div class="esp" id="el-adriene-esp">ESPECIAL: É HORA DO BRIGADEIRO!</div>
+      <div class="flash" id="el-adriene-flash"></div>
+    </div>
+    <div id="el-cardoso" class="card clip" data-start="7.447" data-duration="0.414" style="--cor:#6a4c93" data-layout-allow-overlap data-layout-allow-overflow>
+      <div class="linhas" id="el-cardoso-linhas"></div>
+      <div class="faixa" id="el-cardoso-faixa"></div>
+      <img class="lutador" id="el-cardoso-img" src="assets/elenco/cardoso_special.png" alt="">
+      <div class="num">#17</div>
+      <div class="job" id="el-cardoso-job">BAIXISTA</div>
+      <div class="nome" id="el-cardoso-nome">LUCAS CARDOSO</div>
+      <div class="esp" id="el-cardoso-esp">ESPECIAL: LIMADOS COM SUCESSO!</div>
+      <div class="flash" id="el-cardoso-flash"></div>
+    </div>
+    <div id="el-th" class="card clip" data-start="7.86" data-duration="0.414" style="--cor:#00a6d6" data-layout-allow-overlap data-layout-allow-overflow>
+      <div class="linhas" id="el-th-linhas"></div>
+      <div class="faixa" id="el-th-faixa"></div>
+      <img class="lutador" id="el-th-img" src="assets/elenco/th_special.png" alt="">
+      <div class="num">#18</div>
+      <div class="job" id="el-th-job">REPÓRTER</div>
+      <div class="nome" id="el-th-nome">THIAGO (TH)</div>
+      <div class="esp" id="el-th-esp">ESPECIAL: ANÚNCIOS DA SEMANA</div>
+      <div class="flash" id="el-th-flash"></div>
+    </div>
+    <div id="el-douglinhas" class="card clip" data-start="8.274" data-duration="0.414" style="--cor:#8a1538" data-layout-allow-overlap data-layout-allow-overflow>
+      <div class="linhas" id="el-douglinhas-linhas"></div>
+      <div class="faixa" id="el-douglinhas-faixa"></div>
+      <img class="lutador" id="el-douglinhas-img" src="assets/elenco/douglinhas_special.png" alt="">
+      <div class="num">#19</div>
+      <div class="job" id="el-douglinhas-job">TRICOLOR</div>
+      <div class="nome" id="el-douglinhas-nome">DOUGLINHAS</div>
+      <div class="esp" id="el-douglinhas-esp">ESPECIAL: QUE TENHAMOS LÁGRIMAS!</div>
+      <div class="flash" id="el-douglinhas-flash"></div>
+    </div>
+    <div id="el-ricardo" class="card clip" data-start="8.688" data-duration="0.414" style="--cor:#ff8c1a" data-layout-allow-overlap data-layout-allow-overflow>
+      <div class="linhas" id="el-ricardo-linhas"></div>
+      <div class="faixa" id="el-ricardo-faixa"></div>
+      <img class="lutador" id="el-ricardo-img" src="assets/elenco/ricardo_special.png" alt="">
+      <div class="num">#20</div>
+      <div class="job" id="el-ricardo-job">KARATÊ E LOUVOR</div>
+      <div class="nome" id="el-ricardo-nome">RICARDO</div>
+      <div class="esp" id="el-ricardo-esp">ESPECIAL: NEM PORRRTAAAAS!</div>
+      <div class="flash" id="el-ricardo-flash"></div>
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo('#el-bispo-flash', { opacity: 0.85 }, { opacity: 0, duration: 0.12, ease: 'power2.out' }, 0);
+    tl.fromTo('#el-bispo-linhas', { x: 0 }, { x: -700, duration: 0.414, ease: 'none' }, 0);
+    tl.fromTo('#el-bispo-faixa', { x: -1300 }, { x: 0, duration: 0.16, ease: 'expo.out' }, 0);
+    tl.fromTo('#el-bispo-img', { x: 420, filter: 'blur(14px)' }, { x: 0, filter: 'blur(0px)', duration: 0.18, ease: 'expo.out' }, 0);
+    tl.fromTo('#el-bispo-img', { scale: 1 }, { scale: 1.03, duration: 0.234, ease: 'power1.out' }, 0.180);
+    tl.fromTo('#el-bispo-job', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.13, ease: 'power4.out' }, 0.040);
+    tl.fromTo('#el-bispo-nome', { opacity: 0, x: -80, filter: 'blur(10px)' }, { opacity: 1, x: 0, filter: 'blur(0px)', duration: 0.15, ease: 'expo.out' }, 0.060);
+    tl.fromTo('#el-bispo-esp', { opacity: 0 }, { opacity: 1, duration: 0.1, ease: 'power2.out' }, 0.120);
+    tl.fromTo('#el-lutador-flash', { opacity: 0.85 }, { opacity: 0, duration: 0.12, ease: 'power2.out' }, 0.414);
+    tl.fromTo('#el-lutador-linhas', { x: 0 }, { x: -1400, duration: 0.827, ease: 'none' }, 0.414);
+    tl.fromTo('#el-lutador-faixa', { x: -1300 }, { x: 0, duration: 0.16, ease: 'expo.out' }, 0.414);
+    tl.fromTo('#el-lutador-img', { x: 420, filter: 'blur(14px)' }, { x: 0, filter: 'blur(0px)', duration: 0.18, ease: 'expo.out' }, 0.414);
+    tl.fromTo('#el-lutador-img', { scale: 1 }, { scale: 1.06, duration: 0.647, ease: 'power1.out' }, 0.594);
+    tl.fromTo('#el-lutador-job', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.13, ease: 'power4.out' }, 0.454);
+    tl.fromTo('#el-lutador-nome', { opacity: 0, x: -80, filter: 'blur(10px)' }, { opacity: 1, x: 0, filter: 'blur(0px)', duration: 0.15, ease: 'expo.out' }, 0.474);
+    tl.fromTo('#el-lutador-esp', { opacity: 0 }, { opacity: 1, duration: 0.1, ease: 'power2.out' }, 0.534);
+    tl.fromTo('#el-nutri-flash', { opacity: 0.85 }, { opacity: 0, duration: 0.12, ease: 'power2.out' }, 1.241);
+    tl.fromTo('#el-nutri-linhas', { x: 0 }, { x: -1400, duration: 0.827, ease: 'none' }, 1.241);
+    tl.fromTo('#el-nutri-faixa', { x: -1300 }, { x: 0, duration: 0.16, ease: 'expo.out' }, 1.241);
+    tl.fromTo('#el-nutri-img', { x: 420, filter: 'blur(14px)' }, { x: 0, filter: 'blur(0px)', duration: 0.18, ease: 'expo.out' }, 1.241);
+    tl.fromTo('#el-nutri-img', { scale: 1 }, { scale: 1.06, duration: 0.647, ease: 'power1.out' }, 1.421);
+    tl.fromTo('#el-nutri-job', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.13, ease: 'power4.out' }, 1.281);
+    tl.fromTo('#el-nutri-nome', { opacity: 0, x: -80, filter: 'blur(10px)' }, { opacity: 1, x: 0, filter: 'blur(0px)', duration: 0.15, ease: 'expo.out' }, 1.301);
+    tl.fromTo('#el-nutri-esp', { opacity: 0 }, { opacity: 1, duration: 0.1, ease: 'power2.out' }, 1.361);
+    tl.fromTo('#el-emanuelly-flash', { opacity: 0.85 }, { opacity: 0, duration: 0.12, ease: 'power2.out' }, 2.069);
+    tl.fromTo('#el-emanuelly-linhas', { x: 0 }, { x: -700, duration: 0.414, ease: 'none' }, 2.069);
+    tl.fromTo('#el-emanuelly-faixa', { x: -1300 }, { x: 0, duration: 0.16, ease: 'expo.out' }, 2.069);
+    tl.fromTo('#el-emanuelly-img', { x: 420, filter: 'blur(14px)' }, { x: 0, filter: 'blur(0px)', duration: 0.18, ease: 'expo.out' }, 2.069);
+    tl.fromTo('#el-emanuelly-img', { scale: 1 }, { scale: 1.03, duration: 0.234, ease: 'power1.out' }, 2.249);
+    tl.fromTo('#el-emanuelly-job', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.13, ease: 'power4.out' }, 2.109);
+    tl.fromTo('#el-emanuelly-nome', { opacity: 0, x: -80, filter: 'blur(10px)' }, { opacity: 1, x: 0, filter: 'blur(0px)', duration: 0.15, ease: 'expo.out' }, 2.129);
+    tl.fromTo('#el-emanuelly-esp', { opacity: 0 }, { opacity: 1, duration: 0.1, ease: 'power2.out' }, 2.189);
+    tl.fromTo('#el-enzo-flash', { opacity: 0.85 }, { opacity: 0, duration: 0.12, ease: 'power2.out' }, 2.482);
+    tl.fromTo('#el-enzo-linhas', { x: 0 }, { x: -700, duration: 0.414, ease: 'none' }, 2.482);
+    tl.fromTo('#el-enzo-faixa', { x: -1300 }, { x: 0, duration: 0.16, ease: 'expo.out' }, 2.482);
+    tl.fromTo('#el-enzo-img', { x: 420, filter: 'blur(14px)' }, { x: 0, filter: 'blur(0px)', duration: 0.18, ease: 'expo.out' }, 2.482);
+    tl.fromTo('#el-enzo-img', { scale: 1 }, { scale: 1.03, duration: 0.234, ease: 'power1.out' }, 2.662);
+    tl.fromTo('#el-enzo-job', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.13, ease: 'power4.out' }, 2.522);
+    tl.fromTo('#el-enzo-nome', { opacity: 0, x: -80, filter: 'blur(10px)' }, { opacity: 1, x: 0, filter: 'blur(0px)', duration: 0.15, ease: 'expo.out' }, 2.542);
+    tl.fromTo('#el-enzo-esp', { opacity: 0 }, { opacity: 1, duration: 0.1, ease: 'power2.out' }, 2.602);
+    tl.fromTo('#el-pedro-flash', { opacity: 0.85 }, { opacity: 0, duration: 0.12, ease: 'power2.out' }, 2.896);
+    tl.fromTo('#el-pedro-linhas', { x: 0 }, { x: -700, duration: 0.414, ease: 'none' }, 2.896);
+    tl.fromTo('#el-pedro-faixa', { x: -1300 }, { x: 0, duration: 0.16, ease: 'expo.out' }, 2.896);
+    tl.fromTo('#el-pedro-img', { x: 420, filter: 'blur(14px)' }, { x: 0, filter: 'blur(0px)', duration: 0.18, ease: 'expo.out' }, 2.896);
+    tl.fromTo('#el-pedro-img', { scale: 1 }, { scale: 1.03, duration: 0.234, ease: 'power1.out' }, 3.076);
+    tl.fromTo('#el-pedro-job', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.13, ease: 'power4.out' }, 2.936);
+    tl.fromTo('#el-pedro-nome', { opacity: 0, x: -80, filter: 'blur(10px)' }, { opacity: 1, x: 0, filter: 'blur(0px)', duration: 0.15, ease: 'expo.out' }, 2.956);
+    tl.fromTo('#el-pedro-esp', { opacity: 0 }, { opacity: 1, duration: 0.1, ease: 'power2.out' }, 3.016);
+    tl.fromTo('#el-naju-flash', { opacity: 0.85 }, { opacity: 0, duration: 0.12, ease: 'power2.out' }, 3.31);
+    tl.fromTo('#el-naju-linhas', { x: 0 }, { x: -700, duration: 0.414, ease: 'none' }, 3.31);
+    tl.fromTo('#el-naju-faixa', { x: -1300 }, { x: 0, duration: 0.16, ease: 'expo.out' }, 3.31);
+    tl.fromTo('#el-naju-img', { x: 420, filter: 'blur(14px)' }, { x: 0, filter: 'blur(0px)', duration: 0.18, ease: 'expo.out' }, 3.31);
+    tl.fromTo('#el-naju-img', { scale: 1 }, { scale: 1.03, duration: 0.234, ease: 'power1.out' }, 3.490);
+    tl.fromTo('#el-naju-job', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.13, ease: 'power4.out' }, 3.350);
+    tl.fromTo('#el-naju-nome', { opacity: 0, x: -80, filter: 'blur(10px)' }, { opacity: 1, x: 0, filter: 'blur(0px)', duration: 0.15, ease: 'expo.out' }, 3.370);
+    tl.fromTo('#el-naju-esp', { opacity: 0 }, { opacity: 1, duration: 0.1, ease: 'power2.out' }, 3.430);
+    tl.fromTo('#el-grazi-flash', { opacity: 0.85 }, { opacity: 0, duration: 0.12, ease: 'power2.out' }, 3.723);
+    tl.fromTo('#el-grazi-linhas', { x: 0 }, { x: -700, duration: 0.414, ease: 'none' }, 3.723);
+    tl.fromTo('#el-grazi-faixa', { x: -1300 }, { x: 0, duration: 0.16, ease: 'expo.out' }, 3.723);
+    tl.fromTo('#el-grazi-img', { x: 420, filter: 'blur(14px)' }, { x: 0, filter: 'blur(0px)', duration: 0.18, ease: 'expo.out' }, 3.723);
+    tl.fromTo('#el-grazi-img', { scale: 1 }, { scale: 1.03, duration: 0.234, ease: 'power1.out' }, 3.903);
+    tl.fromTo('#el-grazi-job', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.13, ease: 'power4.out' }, 3.763);
+    tl.fromTo('#el-grazi-nome', { opacity: 0, x: -80, filter: 'blur(10px)' }, { opacity: 1, x: 0, filter: 'blur(0px)', duration: 0.15, ease: 'expo.out' }, 3.783);
+    tl.fromTo('#el-grazi-esp', { opacity: 0 }, { opacity: 1, duration: 0.1, ease: 'power2.out' }, 3.843);
+    tl.fromTo('#el-lohan-flash', { opacity: 0.85 }, { opacity: 0, duration: 0.12, ease: 'power2.out' }, 4.137);
+    tl.fromTo('#el-lohan-linhas', { x: 0 }, { x: -700, duration: 0.414, ease: 'none' }, 4.137);
+    tl.fromTo('#el-lohan-faixa', { x: -1300 }, { x: 0, duration: 0.16, ease: 'expo.out' }, 4.137);
+    tl.fromTo('#el-lohan-img', { x: 420, filter: 'blur(14px)' }, { x: 0, filter: 'blur(0px)', duration: 0.18, ease: 'expo.out' }, 4.137);
+    tl.fromTo('#el-lohan-img', { scale: 1 }, { scale: 1.03, duration: 0.234, ease: 'power1.out' }, 4.317);
+    tl.fromTo('#el-lohan-job', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.13, ease: 'power4.out' }, 4.177);
+    tl.fromTo('#el-lohan-nome', { opacity: 0, x: -80, filter: 'blur(10px)' }, { opacity: 1, x: 0, filter: 'blur(0px)', duration: 0.15, ease: 'expo.out' }, 4.197);
+    tl.fromTo('#el-lohan-esp', { opacity: 0 }, { opacity: 1, duration: 0.1, ease: 'power2.out' }, 4.257);
+    tl.fromTo('#el-rafinha-flash', { opacity: 0.85 }, { opacity: 0, duration: 0.12, ease: 'power2.out' }, 4.551);
+    tl.fromTo('#el-rafinha-linhas', { x: 0 }, { x: -700, duration: 0.414, ease: 'none' }, 4.551);
+    tl.fromTo('#el-rafinha-faixa', { x: -1300 }, { x: 0, duration: 0.16, ease: 'expo.out' }, 4.551);
+    tl.fromTo('#el-rafinha-img', { x: 420, filter: 'blur(14px)' }, { x: 0, filter: 'blur(0px)', duration: 0.18, ease: 'expo.out' }, 4.551);
+    tl.fromTo('#el-rafinha-img', { scale: 1 }, { scale: 1.03, duration: 0.234, ease: 'power1.out' }, 4.731);
+    tl.fromTo('#el-rafinha-job', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.13, ease: 'power4.out' }, 4.591);
+    tl.fromTo('#el-rafinha-nome', { opacity: 0, x: -80, filter: 'blur(10px)' }, { opacity: 1, x: 0, filter: 'blur(0px)', duration: 0.15, ease: 'expo.out' }, 4.611);
+    tl.fromTo('#el-rafinha-esp', { opacity: 0 }, { opacity: 1, duration: 0.1, ease: 'power2.out' }, 4.671);
+    tl.fromTo('#el-douglas-flash', { opacity: 0.85 }, { opacity: 0, duration: 0.12, ease: 'power2.out' }, 4.964);
+    tl.fromTo('#el-douglas-linhas', { x: 0 }, { x: -700, duration: 0.414, ease: 'none' }, 4.964);
+    tl.fromTo('#el-douglas-faixa', { x: -1300 }, { x: 0, duration: 0.16, ease: 'expo.out' }, 4.964);
+    tl.fromTo('#el-douglas-img', { x: 420, filter: 'blur(14px)' }, { x: 0, filter: 'blur(0px)', duration: 0.18, ease: 'expo.out' }, 4.964);
+    tl.fromTo('#el-douglas-img', { scale: 1 }, { scale: 1.03, duration: 0.234, ease: 'power1.out' }, 5.144);
+    tl.fromTo('#el-douglas-job', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.13, ease: 'power4.out' }, 5.004);
+    tl.fromTo('#el-douglas-nome', { opacity: 0, x: -80, filter: 'blur(10px)' }, { opacity: 1, x: 0, filter: 'blur(0px)', duration: 0.15, ease: 'expo.out' }, 5.024);
+    tl.fromTo('#el-douglas-esp', { opacity: 0 }, { opacity: 1, duration: 0.1, ease: 'power2.out' }, 5.084);
+    tl.fromTo('#el-fidelis-flash', { opacity: 0.85 }, { opacity: 0, duration: 0.12, ease: 'power2.out' }, 5.378);
+    tl.fromTo('#el-fidelis-linhas', { x: 0 }, { x: -700, duration: 0.414, ease: 'none' }, 5.378);
+    tl.fromTo('#el-fidelis-faixa', { x: -1300 }, { x: 0, duration: 0.16, ease: 'expo.out' }, 5.378);
+    tl.fromTo('#el-fidelis-img', { x: 420, filter: 'blur(14px)' }, { x: 0, filter: 'blur(0px)', duration: 0.18, ease: 'expo.out' }, 5.378);
+    tl.fromTo('#el-fidelis-img', { scale: 1 }, { scale: 1.03, duration: 0.234, ease: 'power1.out' }, 5.558);
+    tl.fromTo('#el-fidelis-job', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.13, ease: 'power4.out' }, 5.418);
+    tl.fromTo('#el-fidelis-nome', { opacity: 0, x: -80, filter: 'blur(10px)' }, { opacity: 1, x: 0, filter: 'blur(0px)', duration: 0.15, ease: 'expo.out' }, 5.438);
+    tl.fromTo('#el-fidelis-esp', { opacity: 0 }, { opacity: 1, duration: 0.1, ease: 'power2.out' }, 5.498);
+    tl.fromTo('#el-arthur-flash', { opacity: 0.85 }, { opacity: 0, duration: 0.12, ease: 'power2.out' }, 5.792);
+    tl.fromTo('#el-arthur-linhas', { x: 0 }, { x: -700, duration: 0.414, ease: 'none' }, 5.792);
+    tl.fromTo('#el-arthur-faixa', { x: -1300 }, { x: 0, duration: 0.16, ease: 'expo.out' }, 5.792);
+    tl.fromTo('#el-arthur-img', { x: 420, filter: 'blur(14px)' }, { x: 0, filter: 'blur(0px)', duration: 0.18, ease: 'expo.out' }, 5.792);
+    tl.fromTo('#el-arthur-img', { scale: 1 }, { scale: 1.03, duration: 0.234, ease: 'power1.out' }, 5.972);
+    tl.fromTo('#el-arthur-job', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.13, ease: 'power4.out' }, 5.832);
+    tl.fromTo('#el-arthur-nome', { opacity: 0, x: -80, filter: 'blur(10px)' }, { opacity: 1, x: 0, filter: 'blur(0px)', duration: 0.15, ease: 'expo.out' }, 5.852);
+    tl.fromTo('#el-arthur-esp', { opacity: 0 }, { opacity: 1, duration: 0.1, ease: 'power2.out' }, 5.912);
+    tl.fromTo('#el-lucas-flash', { opacity: 0.85 }, { opacity: 0, duration: 0.12, ease: 'power2.out' }, 6.206);
+    tl.fromTo('#el-lucas-linhas', { x: 0 }, { x: -700, duration: 0.414, ease: 'none' }, 6.206);
+    tl.fromTo('#el-lucas-faixa', { x: -1300 }, { x: 0, duration: 0.16, ease: 'expo.out' }, 6.206);
+    tl.fromTo('#el-lucas-img', { x: 420, filter: 'blur(14px)' }, { x: 0, filter: 'blur(0px)', duration: 0.18, ease: 'expo.out' }, 6.206);
+    tl.fromTo('#el-lucas-img', { scale: 1 }, { scale: 1.03, duration: 0.234, ease: 'power1.out' }, 6.386);
+    tl.fromTo('#el-lucas-job', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.13, ease: 'power4.out' }, 6.246);
+    tl.fromTo('#el-lucas-nome', { opacity: 0, x: -80, filter: 'blur(10px)' }, { opacity: 1, x: 0, filter: 'blur(0px)', duration: 0.15, ease: 'expo.out' }, 6.266);
+    tl.fromTo('#el-lucas-esp', { opacity: 0 }, { opacity: 1, duration: 0.1, ease: 'power2.out' }, 6.326);
+    tl.fromTo('#el-duda-flash', { opacity: 0.85 }, { opacity: 0, duration: 0.12, ease: 'power2.out' }, 6.619);
+    tl.fromTo('#el-duda-linhas', { x: 0 }, { x: -700, duration: 0.414, ease: 'none' }, 6.619);
+    tl.fromTo('#el-duda-faixa', { x: -1300 }, { x: 0, duration: 0.16, ease: 'expo.out' }, 6.619);
+    tl.fromTo('#el-duda-img', { x: 420, filter: 'blur(14px)' }, { x: 0, filter: 'blur(0px)', duration: 0.18, ease: 'expo.out' }, 6.619);
+    tl.fromTo('#el-duda-img', { scale: 1 }, { scale: 1.03, duration: 0.234, ease: 'power1.out' }, 6.799);
+    tl.fromTo('#el-duda-job', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.13, ease: 'power4.out' }, 6.659);
+    tl.fromTo('#el-duda-nome', { opacity: 0, x: -80, filter: 'blur(10px)' }, { opacity: 1, x: 0, filter: 'blur(0px)', duration: 0.15, ease: 'expo.out' }, 6.679);
+    tl.fromTo('#el-duda-esp', { opacity: 0 }, { opacity: 1, duration: 0.1, ease: 'power2.out' }, 6.739);
+    tl.fromTo('#el-adriene-flash', { opacity: 0.85 }, { opacity: 0, duration: 0.12, ease: 'power2.out' }, 7.033);
+    tl.fromTo('#el-adriene-linhas', { x: 0 }, { x: -700, duration: 0.414, ease: 'none' }, 7.033);
+    tl.fromTo('#el-adriene-faixa', { x: -1300 }, { x: 0, duration: 0.16, ease: 'expo.out' }, 7.033);
+    tl.fromTo('#el-adriene-img', { x: 420, filter: 'blur(14px)' }, { x: 0, filter: 'blur(0px)', duration: 0.18, ease: 'expo.out' }, 7.033);
+    tl.fromTo('#el-adriene-img', { scale: 1 }, { scale: 1.03, duration: 0.234, ease: 'power1.out' }, 7.213);
+    tl.fromTo('#el-adriene-job', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.13, ease: 'power4.out' }, 7.073);
+    tl.fromTo('#el-adriene-nome', { opacity: 0, x: -80, filter: 'blur(10px)' }, { opacity: 1, x: 0, filter: 'blur(0px)', duration: 0.15, ease: 'expo.out' }, 7.093);
+    tl.fromTo('#el-adriene-esp', { opacity: 0 }, { opacity: 1, duration: 0.1, ease: 'power2.out' }, 7.153);
+    tl.fromTo('#el-cardoso-flash', { opacity: 0.85 }, { opacity: 0, duration: 0.12, ease: 'power2.out' }, 7.447);
+    tl.fromTo('#el-cardoso-linhas', { x: 0 }, { x: -700, duration: 0.414, ease: 'none' }, 7.447);
+    tl.fromTo('#el-cardoso-faixa', { x: -1300 }, { x: 0, duration: 0.16, ease: 'expo.out' }, 7.447);
+    tl.fromTo('#el-cardoso-img', { x: 420, filter: 'blur(14px)' }, { x: 0, filter: 'blur(0px)', duration: 0.18, ease: 'expo.out' }, 7.447);
+    tl.fromTo('#el-cardoso-img', { scale: 1 }, { scale: 1.03, duration: 0.234, ease: 'power1.out' }, 7.627);
+    tl.fromTo('#el-cardoso-job', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.13, ease: 'power4.out' }, 7.487);
+    tl.fromTo('#el-cardoso-nome', { opacity: 0, x: -80, filter: 'blur(10px)' }, { opacity: 1, x: 0, filter: 'blur(0px)', duration: 0.15, ease: 'expo.out' }, 7.507);
+    tl.fromTo('#el-cardoso-esp', { opacity: 0 }, { opacity: 1, duration: 0.1, ease: 'power2.out' }, 7.567);
+    tl.fromTo('#el-th-flash', { opacity: 0.85 }, { opacity: 0, duration: 0.12, ease: 'power2.out' }, 7.86);
+    tl.fromTo('#el-th-linhas', { x: 0 }, { x: -700, duration: 0.414, ease: 'none' }, 7.86);
+    tl.fromTo('#el-th-faixa', { x: -1300 }, { x: 0, duration: 0.16, ease: 'expo.out' }, 7.86);
+    tl.fromTo('#el-th-img', { x: 420, filter: 'blur(14px)' }, { x: 0, filter: 'blur(0px)', duration: 0.18, ease: 'expo.out' }, 7.86);
+    tl.fromTo('#el-th-img', { scale: 1 }, { scale: 1.03, duration: 0.234, ease: 'power1.out' }, 8.040);
+    tl.fromTo('#el-th-job', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.13, ease: 'power4.out' }, 7.900);
+    tl.fromTo('#el-th-nome', { opacity: 0, x: -80, filter: 'blur(10px)' }, { opacity: 1, x: 0, filter: 'blur(0px)', duration: 0.15, ease: 'expo.out' }, 7.920);
+    tl.fromTo('#el-th-esp', { opacity: 0 }, { opacity: 1, duration: 0.1, ease: 'power2.out' }, 7.980);
+    tl.fromTo('#el-douglinhas-flash', { opacity: 0.85 }, { opacity: 0, duration: 0.12, ease: 'power2.out' }, 8.274);
+    tl.fromTo('#el-douglinhas-linhas', { x: 0 }, { x: -700, duration: 0.414, ease: 'none' }, 8.274);
+    tl.fromTo('#el-douglinhas-faixa', { x: -1300 }, { x: 0, duration: 0.16, ease: 'expo.out' }, 8.274);
+    tl.fromTo('#el-douglinhas-img', { x: 420, filter: 'blur(14px)' }, { x: 0, filter: 'blur(0px)', duration: 0.18, ease: 'expo.out' }, 8.274);
+    tl.fromTo('#el-douglinhas-img', { scale: 1 }, { scale: 1.03, duration: 0.234, ease: 'power1.out' }, 8.454);
+    tl.fromTo('#el-douglinhas-job', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.13, ease: 'power4.out' }, 8.314);
+    tl.fromTo('#el-douglinhas-nome', { opacity: 0, x: -80, filter: 'blur(10px)' }, { opacity: 1, x: 0, filter: 'blur(0px)', duration: 0.15, ease: 'expo.out' }, 8.334);
+    tl.fromTo('#el-douglinhas-esp', { opacity: 0 }, { opacity: 1, duration: 0.1, ease: 'power2.out' }, 8.394);
+    tl.fromTo('#el-ricardo-flash', { opacity: 0.85 }, { opacity: 0, duration: 0.12, ease: 'power2.out' }, 8.688);
+    tl.fromTo('#el-ricardo-linhas', { x: 0 }, { x: -700, duration: 0.414, ease: 'none' }, 8.688);
+    tl.fromTo('#el-ricardo-faixa', { x: -1300 }, { x: 0, duration: 0.16, ease: 'expo.out' }, 8.688);
+    tl.fromTo('#el-ricardo-img', { x: 420, filter: 'blur(14px)' }, { x: 0, filter: 'blur(0px)', duration: 0.18, ease: 'expo.out' }, 8.688);
+    tl.fromTo('#el-ricardo-img', { scale: 1 }, { scale: 1.03, duration: 0.234, ease: 'power1.out' }, 8.868);
+    tl.fromTo('#el-ricardo-job', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.13, ease: 'power4.out' }, 8.728);
+    tl.fromTo('#el-ricardo-nome', { opacity: 0, x: -80, filter: 'blur(10px)' }, { opacity: 1, x: 0, filter: 'blur(0px)', duration: 0.15, ease: 'expo.out' }, 8.748);
+    tl.fromTo('#el-ricardo-esp', { opacity: 0 }, { opacity: 1, duration: 0.1, ease: 'power2.out' }, 8.808);
+    window.__timelines['elenco'] = tl;
+  </script>
+</template>

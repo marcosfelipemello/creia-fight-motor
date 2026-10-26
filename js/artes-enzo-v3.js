@@ -1,0 +1,118 @@
+/* Poses do Enzo; somente desenho, sem alterar combate ou controles. */
+(function () {
+  'use strict';
+  var rig=window.Rig, meta=window.EnzoArtAssets, images={};
+  var original={draw:rig.draw,big:rig.big,portrait:rig.portrait,ready:rig.ready,item:rig.item};
+  Object.keys(meta).forEach(function (name) {
+    var image=new Image();
+    image.src=window.EnzoArtEmbedded[name];
+    images[name]=image;
+  });
+  function loaded() {
+    return Object.keys(images).every(function (name) {return images[name].complete && images[name].naturalWidth>0;});
+  }
+  window.EnzoArtPreview={
+    ready:loaded,
+    failed:function(){return Object.keys(images).filter(function(name){return images[name].complete && !images[name].naturalWidth;});}
+  };
+  function poseFor(state,opts) {
+    if(opts.guard || state==='guard')return 'defesa';
+    if(state==='cutin')return 'cena-especial';
+    if(state==='special' || state==='victory')return 'especial';
+    if(state==='attack2')return 'secundario';
+    if(state==='throw')return opts.enzoThree?'secundario':'primario';
+    if(opts.airThrow && (state==='jump' || state==='idle' || state==='walk'))return 'primario';
+    if(state==='attack1' || state==='attack3' || state==='jumpkick')return 'primario';
+    if(state==='idle' || state==='walk')return 'base-corpo';
+    return 'base';
+  }
+  function drawBall(ctx,x,y,rot,scale) {
+    var rect=meta.bola.rect,k=meta.bola.diameter/Math.max(rect[2],rect[3]);
+    ctx.save();ctx.translate(x,y);ctx.rotate(rot||0);ctx.scale(scale==null?1:scale,scale==null?1:scale);
+    ctx.imageSmoothingEnabled=false;
+    ctx.drawImage(images.bola,rect[0],rect[1],rect[2],rect[3],-rect[2]*k/2,-rect[3]*k/2,rect[2]*k,rect[3]*k);
+    ctx.restore();
+  }
+  function dribble(ctx,t,x,y,facing,opts) {
+    var m=meta['base-corpo'],k=rig.height/m.bodyHeight,r=meta.bola.diameter/2;
+    var handY=(m.hold[1]-m.feet[1])*k,groundY=-r,u=((t%0.64)+0.64)%0.64/0.64;
+    var progress=u<=0.5?Math.pow(u*2,2):1-(2*(u*2-1)-Math.pow(u*2-1,2));
+    var ballY=handY+(groundY-handY)*progress;
+    ctx.save();ctx.translate(x,y);ctx.scale(facing<0?-1:1,1);
+    if(opts.alpha!=null)ctx.globalAlpha*=opts.alpha;
+    drawBall(ctx,(m.hold[0]-m.feet[0])*k,ballY,t*0.6,1);
+    ctx.restore();
+  }
+  var walkLayers=null;
+  function prepareWalk(img,m) {
+    function canvas(){var c=document.createElement('canvas');c.width=img.naturalWidth;c.height=img.naturalHeight;return c;}
+    function polygon(c){c.beginPath();m.walk.legs.forEach(function(p,i){if(i)c.lineTo(p[0],p[1]);else c.moveTo(p[0],p[1]);});c.closePath();}
+    var legs=canvas(),body=canvas(),l=legs.getContext('2d'),b=body.getContext('2d');
+    l.save();polygon(l);l.clip();l.drawImage(img,0,0);l.restore();
+    b.drawImage(img,0,0);b.globalCompositeOperation='destination-out';polygon(b);b.fill();b.globalCompositeOperation='source-over';
+    return {legs:legs,body:body};
+  }
+  function walk(ctx,img,m,k,t) {
+    if(!walkLayers)walkLayers=prepareWalk(img,m);
+    var waist=m.walk.waist,split=m.walk.split,span=m.feet[1]-waist;
+    for(var leg=0;leg<2;leg++) {
+      var phase=t*11+leg*Math.PI,stride=Math.sin(phase)*6;
+      var lift=Math.max(0,Math.cos(phase))*3,compression=1-lift/(span*k);
+      var sx=leg?split:0,sw=leg?img.naturalWidth-split:split;
+      var strip=m.walk.strip;
+      for(var sy=waist;sy<img.naturalHeight;sy+=strip) {
+        var sh=Math.min(strip,img.naturalHeight-sy),depth=Math.min(1,Math.max(0,(sy+sh/2-waist)/span));
+        var dx=(sx-m.feet[0])*k+stride*depth+lift*0.75*Math.sin(depth*Math.PI);
+        var dy=(waist-m.feet[1])*k+(sy-waist)*k*compression;
+        ctx.drawImage(walkLayers.legs,sx,sy,sw,sh,dx,dy,sw*k,sh*k*compression+0.03);
+      }
+    }
+    ctx.drawImage(walkLayers.body,-m.feet[0]*k,-m.feet[1]*k,img.naturalWidth*k,img.naturalHeight*k);
+  }
+  function draw(ctx,state,t,x,y,facing,opts) {
+    opts=opts || {};
+    var name=poseFor(state,opts),m=meta[name],img=images[name],k=rig.height/m.bodyHeight;
+    var bob=state==='walk'?-Math.abs(Math.sin(t*22))*0.5:state==='idle'?-Math.abs(Math.sin(t*5))*0.5:0;
+    var lean=state==='walk'?Math.sin(t*11)*0.012:state==='hurt'?-0.12*Math.max(0,1-t/0.3):0;
+    if(state==='ko')lean=-Math.PI/2*Math.min(1,t/0.3);
+    // A mão fica à frente da bola quando ela volta ao topo do quique.
+    if(name==='base-corpo')dribble(ctx,opts.dribbleT==null?t:opts.dribbleT,x,y,facing,opts);
+    ctx.save();ctx.translate(x,y+bob);ctx.scale(facing<0?-1:1,1);ctx.rotate(lean);
+    if(opts.alpha!=null)ctx.globalAlpha*=opts.alpha;
+    ctx.imageSmoothingEnabled=false;
+    if(opts.flash){ctx.shadowColor='#fff';ctx.shadowBlur=3;}
+    if(state==='walk' && m.walk)walk(ctx,img,m,k,t);
+    else ctx.drawImage(img,-m.feet[0]*k,-m.feet[1]*k,img.naturalWidth*k,img.naturalHeight*k);
+    ctx.restore();
+    return true;
+  }
+  rig.ready=function (who) {return who==='enzo'?loaded():original.ready.apply(rig,arguments);};
+  rig.draw=function (ctx,who,state,t,x,y,facing,opts) {
+    if(who!=='enzo')return original.draw.apply(rig,arguments);
+    return loaded()?draw(ctx,state,t||0,x,y,facing,opts):true;
+  };
+  rig.big=function (ctx,who,state,t,x,y,facing,scale) {
+    if(who!=='enzo')return original.big.apply(rig,arguments);
+    if(!loaded())return true;
+    ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);draw(ctx,state,t||0,0,0,facing,{});ctx.restore();return true;
+  };
+  rig.portrait=function (ctx,who,x,y) {
+    if(who!=='enzo')return original.portrait.apply(rig,arguments);
+    if(!loaded())return true;
+    var crop=meta.base.head;
+    ctx.save();ctx.imageSmoothingEnabled=false;
+    ctx.drawImage(images.base,crop[0],crop[1],crop[2],crop[3],x,y,28,28);ctx.restore();return true;
+  };
+  rig.enzoCine=function (ctx,x,y,w,h) {
+    if(!loaded())return false;
+    var crop=meta['cena-especial'].cine,k=Math.min(w/crop[2],h/crop[3]);
+    ctx.save();ctx.imageSmoothingEnabled=false;
+    ctx.drawImage(images['cena-especial'],crop[0],crop[1],crop[2],crop[3],
+      x+(w-crop[2]*k)/2,y+(h-crop[3]*k)/2,crop[2]*k,crop[3]*k);
+    ctx.restore();return true;
+  };
+  rig.item=function (ctx,kind,x,y,rot,scale) {
+    if(kind!=='basquete' || !loaded())return original.item.apply(rig,arguments);
+    drawBall(ctx,x,y,rot,scale);return true;
+  };
+}());

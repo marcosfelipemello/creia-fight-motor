@@ -1,0 +1,14 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
+const env={window:{}};vm.createContext(env);vm.runInContext(fs.readFileSync(path.join(__dirname,'../js/hud-combate.js'),'utf8'),env);const HUD=env.window.CreiaHUD;
+function render(mode,state){const ops=[],labels=[],ctx={fillStyle:'',font:'',save(){},restore(){},translate(){},scale(){},beginPath(){},moveTo(){},lineTo(){},closePath(){},fill(){},measureText:s=>({width:String(s).length*4}),fillRect(x,y,w,h){assert([x,y,w,h].every(Number.isFinite));assert(w>=0&&h>=0);assert(x>=0&&x+w<=480.01,'HUD vazou horizontalmente');assert(y>=0&&y+h<=115,'HUD cobriu a arena além do limite');ops.push({x,y,w,h,color:this.fillStyle});},fillText(s,x,y){labels.push({text:String(s),x,y});}};const before=JSON.stringify(state);HUD[mode](ctx,state,()=>{});assert.equal(JSON.stringify(state),before,'HUD alterou o estado do combate');return {ops,labels};}
+const player=(extra={})=>Object.assign({who:'pedro',hp:50,maxHp:100,sp:50,guardHp:50,guardCd:0,ctl:0,ai:false},extra),names={pedro:'PEDRO GUILHERME'};
+const x=render('x1',{players:[player(),player({ctl:1})],names,round:{number:3,wins:[1,1]}});
+assert(x.ops.some(o=>o.y===19&&o.x===44&&o.w===77&&o.color===HUD.colors.red));assert(x.ops.some(o=>o.y===19&&o.x===359&&o.w===77&&o.color===HUD.colors.blue),'barra do P2 não foi espelhada');assert(!x.labels.some(o=>/PONTOS|RECORDE/.test(o.text)));
+const dead=render('x1',{players:[player({dead:true,hp:0,sp:100}),player({guardCd:1,guardHp:0})],names,round:{number:1,wins:[0,0]}});assert(dead.labels.some(o=>o.text==='K.O.'));assert(dead.labels.some(o=>o.text==='DEF QUEBRADA'));assert(!dead.labels.some(o=>o.text==='ESPECIAL PRONTO'));
+for(let count=1;count<=4;count++){
+ const players=Array.from({length:count},(_,i)=>player({ai:i>0,dead:i===3,hp:i===3?0:100,sp:i===1?100:20,limadoT:i===2?4:0}));
+ const story=render('adventure',{players,names,stage:9,place:'O CALDO E O PASTEL SUPREMO',wave:4,waves:4,score:'0024950',hi:'0059820',combo:8,mult:3,bossOn:true,bosses:[{name:'O CALDO DE CANA INFINITO',hp:320,maxHp:920},{name:'O PASTEL SUPREMO',hp:810,maxHp:920}]});assert(story.labels.some(o=>o.text==='PONTOS 0024950'));assert(story.labels.some(o=>o.text==='RECORDE 0059820'));assert.equal(story.ops.filter(o=>o.y===84&&o.color===HUD.colors.red).length,2);
+}
+for(const name of ['index.html','jogo.html']){const scripts=Array.from(fs.readFileSync(path.join(__dirname,'..',name),'utf8').matchAll(/<script src="([^"]+)"/g),m=>m[1]);assert.equal(scripts.filter(s=>s==='js/hud-combate.js').length,1);assert(scripts.indexOf('js/hud-combate.js')<scripts.indexOf('js/game.js'));}
+console.log('HUD: HP espelhado, defesa quebrada, K.O., 1–4 participantes, dois chefes, pontuação só na história e estado preservado: OK');

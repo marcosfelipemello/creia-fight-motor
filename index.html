@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Creia Fight</title>
+<link rel="icon" href="assets/icone-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preload" as="image" href="assets/cenarios/titulo.webp">
+<link rel="preload" as="image" href="assets/cenarios/creia_back.webp">
+<link rel="preload" as="image" href="assets/cenarios/creia_chao.webp">
+<meta name="theme-color" content="#0b0a10">
+<meta name="description" content="Deus, fé e muita resenha">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://bangu.kryventech.com.br/">
+<meta property="og:title" content="Creia Fight">
+<meta property="og:description" content="Deus, fé e muita resenha">
+<meta property="og:image" content="https://bangu.kryventech.com.br/assets/compartilhar.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="pt_BR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://bangu.kryventech.com.br/assets/compartilhar.jpg">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Creia Fight">
+<link rel="apple-touch-icon" href="assets/icone-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
+<style>
+  /* sem zoom: toque duplo e pinça não ampliam a tela (botões do celular apertados rápido davam zoom) */
+  html, body, canvas { touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+  :root { --bg: #0b0a10; }
+  html, body { margin: 0; height: 100%; background: var(--bg); overflow: hidden; }
+  body { display: flex; align-items: center; justify-content: center; }
+  canvas {
+    width: min(100vw, calc(100vh * 16 / 9));
+    width: min(100vw, calc(100dvh * 16 / 9));
+    aspect-ratio: 16 / 9;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    display: block;
+  }
+</style>
+</head>
+<body>
+<canvas id="game" width="480" height="270" tabindex="0" aria-label="Jogo Creia Fight"></canvas>
+<script src="js/abertura.js"></script>
+<script src="js/sprites.js"></script>
+<script src="js/backgrounds.js"></script>
+<script src="js/bosses.js"></script>
+<script src="js/viloes.js"></script>
+<script src="js/cenarios-arte.js"></script>
+<script src="js/criancas.js"></script>
+<script src="js/bichos.js"></script>
+<script src="js/objetos.js"></script>
+<script src="js/rig.js"></script>
+<script src="js/marcos-assets.js"></script>
+<script src="js/artes-marcos.js"></script>
+<script src="js/bispo-assets.js"></script>
+<script src="js/artes-bispo.js"></script>
+<script src="js/rafinha-assets-r3.js"></script>
+<script src="js/artes-rafinha-r3.js"></script>
+<script src="js/enzo-assets-v3.js"></script>
+<script src="js/artes-enzo-v3.js"></script>
+<script src="js/lohan-assets-v1.js"></script>
+<script src="js/artes-lohan-v1.js"></script>
+<script src="js/grazi-assets-v1.js"></script>
+<script src="js/artes-grazi-v1.js"></script>
+<script src="js/th-assets-v1.js"></script>
+<script src="js/artes-th-v1.js"></script>
+<script src="js/douglinhas-assets-v1.js"></script>
+<script src="js/artes-douglinhas-v1.js"></script>
+<script src="js/ricardo-assets.js"></script>
+<script src="js/artes-ricardo.js"></script>
+<script src="js/adriene-visual.js"></script>
+<script src="js/artes-adriene.js"></script>
+<script src="js/lorrany-visual.js"></script>
+<script src="js/artes-lorrany.js"></script>
+<script src="js/combate-fx.js"></script>
+<script src="js/pedro-fx.js"></script>
+<script src="js/pedro-assets-v2.js"></script>
+<script src="js/artes-pedro-v2.js"></script>
+<script src="js/fidelis-visual.js"></script>
+<script src="js/artes-fidelis-v1.js"></script>
+<script src="js/fidelis-audio.js"></script>
+<script src="js/preferencias.js"></script>
+<script src="js/ajustes.js"></script>
+<script src="js/encontros.js"></script>
+<script src="js/combate-config.js"></script>
+<script src="js/ia-tatica.js"></script>
+<script src="js/jev-client.js"></script>
+<script src="js/interface.js"></script>
+<script src="js/hud-combate.js"></script>
+<script src="js/online.js"></script>
+<script src="js/game.js"></script>
+<script src="js/telacheia.js"></script>
+<script>
+  // iPhone ignora user-scalable=no: bloqueia pinça e toque duplo na mão
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach(function (n) { document.addEventListener(n, function (e) { e.preventDefault(); }, { passive: false }); });
+  document.addEventListener('touchmove', function (e) { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+  var lastTap = 0;
+  document.addEventListener('touchend', function (e) { if (e.target.closest && e.target.closest('#creia-ui')) return; var n = Date.now(); if (n - lastTap < 350) e.preventDefault(); lastTap = n; }, { passive: false });
+  document.addEventListener('dblclick', function (e) { e.preventDefault(); }, { passive: false });
+</script>
+<script>if ('serviceWorker' in navigator) addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });</script>
+</body>
+</html>

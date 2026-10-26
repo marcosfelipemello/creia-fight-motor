@@ -1,0 +1,1 @@
+window.BispoArtAssets={"base":{"bodyHeight":1320,"feet":[537,1386],"head":[372,66,370,420],"walk":{"waist":890,"split":535}},"primario":{"bodyHeight":1404,"feet":[558.5,1435]},"secundario":{"bodyHeight":1319,"feet":[541.5,1381]},"especial":{"bodyHeight":1272,"feet":[543,1400]},"defesa":{"bodyHeight":1319,"feet":[533.5,1417]},"biblia":{"rect":[281,107,956,914]}};

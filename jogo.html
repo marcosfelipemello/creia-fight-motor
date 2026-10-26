@@ -1,0 +1,61 @@
+<title>Creia Fight</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
+<style>
+  /* Um só visual, de fliperama noturno: tela escura, jogo centralizado em 16:9. */
+  :root { --bg: #0b0a10; color-scheme: dark; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--bg); overflow: hidden; display: flex; align-items: center; justify-content: center;
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); box-sizing: border-box; }
+  canvas { width: min(100%, calc(100vh * 16 / 9)); aspect-ratio: 16 / 9; max-width: 100%; image-rendering: pixelated; display: block; outline: none; }
+</style>
+<canvas id="game" width="480" height="270" tabindex="0" aria-label="Jogo Creia Fight"></canvas>
+<script src="js/abertura.js"></script>
+<script src="js/sprites.js"></script>
+<script src="js/backgrounds.js"></script>
+<script src="js/bosses.js"></script>
+<script src="js/viloes.js"></script>
+<script src="js/cenarios-arte.js"></script>
+<script src="js/criancas.js"></script>
+<script src="js/bichos.js"></script>
+<script src="js/objetos.js"></script>
+<script src="js/rig.js"></script>
+<script src="js/marcos-assets.js"></script>
+<script src="js/artes-marcos.js"></script>
+<script src="js/bispo-assets.js"></script>
+<script src="js/artes-bispo.js"></script>
+<script src="js/rafinha-assets-r3.js"></script>
+<script src="js/artes-rafinha-r3.js"></script>
+<script src="js/enzo-assets-v3.js"></script>
+<script src="js/artes-enzo-v3.js"></script>
+<script src="js/lohan-assets-v1.js"></script>
+<script src="js/artes-lohan-v1.js"></script>
+<script src="js/grazi-assets-v1.js"></script>
+<script src="js/artes-grazi-v1.js"></script>
+<script src="js/th-assets-v1.js"></script>
+<script src="js/artes-th-v1.js"></script>
+<script src="js/douglinhas-assets-v1.js"></script>
+<script src="js/artes-douglinhas-v1.js"></script>
+<script src="js/ricardo-assets.js"></script>
+<script src="js/artes-ricardo.js"></script>
+<script src="js/adriene-visual.js"></script>
+<script src="js/artes-adriene.js"></script>
+<script src="js/lorrany-visual.js"></script>
+<script src="js/artes-lorrany.js"></script>
+<script src="js/combate-fx.js"></script>
+<script src="js/pedro-fx.js"></script>
+<script src="js/pedro-assets-v2.js"></script>
+<script src="js/artes-pedro-v2.js"></script>
+<script src="js/fidelis-visual.js"></script>
+<script src="js/artes-fidelis-v1.js"></script>
+<script src="js/fidelis-audio.js"></script>
+<script src="js/preferencias.js"></script>
+<script src="js/ajustes.js"></script>
+<script src="js/encontros.js"></script>
+<script src="js/combate-config.js"></script>
+<script src="js/ia-tatica.js"></script>
+<script src="js/jev-client.js"></script>
+<script src="js/interface.js"></script>
+<script src="js/hud-combate.js"></script>
+<script src="js/online.js"></script>
+<script src="js/game.js"></script>

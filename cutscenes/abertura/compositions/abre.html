@@ -1,0 +1,38 @@
+<template>
+  <style>@font-face{font-family:'Press Start 2P';src:url('assets/fonts/PressStart2P.woff2') format('woff2')}
+@font-face{font-family:'OswaldLocal';src:url('assets/fonts/Oswald.woff2') format('woff2');font-weight:200 700}
+    #root{position:absolute;inset:0;overflow:hidden;background:#000}
+    #abre-cam{position:absolute;inset:0}
+    #abre-fundo{position:absolute;left:0;top:0;width:1920px;height:1080px;image-rendering:pixelated;object-fit:cover}
+    #abre-sombra{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 45%,rgba(5,4,10,.6),rgba(5,4,10,.94) 75%)}
+    .abre-txt{position:absolute;left:0;right:0;text-align:center;color:#fff}
+    #abre-local{top:330px;font:600 58px/1 OswaldLocal,sans-serif;letter-spacing:.32em;color:#f6c16a}
+    #abre-num{top:450px;font:96px/1.2 'Press Start 2P',monospace;text-shadow:8px 8px 0 #b3001b}
+    #abre-quem{top:640px;font:44px/1.2 'Press Start 2P',monospace;color:#fff}
+    #abre-flash{position:absolute;inset:0;background:#fff;opacity:0}
+  </style>
+  <div id="root" data-composition-id="abre" data-width="1920" data-height="1080">
+    <div id="abre-cam">
+      <img id="abre-fundo" src="assets/titulo.webp" alt="">
+      <div id="abre-sombra"></div>
+    </div>
+    <div id="abre-local" class="abre-txt clip" data-start="0.98" data-duration="1.655">BANGU · RIO DE JANEIRO</div>
+    <div id="abre-num" class="abre-txt clip" data-start="1.394" data-duration="1.241">A IGREJA TODA</div>
+    <div id="abre-quem" class="abre-txt clip" data-start="1.807" data-duration="0.828">NO RINGUE. QUEM AGUENTA?</div>
+    <div id="abre-flash"></div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo('#abre-cam', { scale: 1.0 }, { scale: 1.12, duration: 2.635, ease: 'power2.inOut' }, 0);
+    tl.fromTo('#abre-sombra', { opacity: 1 }, { opacity: 0.75, duration: 0.98, ease: 'power2.out' }, 0);
+    tl.fromTo('#abre-local', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.18, ease: 'power4.out' }, 0.98);
+    tl.fromTo('#abre-num', { opacity: 0, scale: 1.8 }, { opacity: 1, scale: 1, duration: 0.16, ease: 'expo.out' }, 1.394);
+    tl.fromTo('#abre-quem', { opacity: 0, x: -60, filter: 'blur(10px)' }, { opacity: 1, x: 0, filter: 'blur(0px)', duration: 0.15, ease: 'expo.out' }, 1.807);
+    tl.to('#abre-cam', { x: -14, y: 8, duration: 0.033, ease: 'none' }, 1.394);
+    tl.to('#abre-cam', { x: 12, y: -6, duration: 0.033, ease: 'none' }, 1.427);
+    tl.to('#abre-cam', { x: -6, y: 4, duration: 0.033, ease: 'none' }, 1.460);
+    tl.to('#abre-cam', { x: 0, y: 0, duration: 0.033, ease: 'none' }, 1.493);
+    tl.fromTo('#abre-flash', { opacity: 0 }, { opacity: 1, duration: 0.314, ease: 'power3.in' }, 2.321);
+    window.__timelines['abre'] = tl;
+  </script>
+</template>
