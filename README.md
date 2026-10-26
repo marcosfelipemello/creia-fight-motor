@@ -227,4 +227,4 @@ O X1 online precisa do servidor. Para testar, rode `node server/index.js` (Node 
 
 O **código** é aberto sob a licença [MIT](LICENSE): pode estudar, copiar, modificar e usar no seu próprio jogo, mantendo o aviso de copyright.
 
-As **artes não entram na licença**. Os personagens são inspirados em pessoas reais da comunidade Creia, então nomes, imagens, sprites, fundos, vídeo de abertura, músicas e falas são todos os direitos reservados. Para criar o seu jogo, use o motor com as suas próprias artes.
+As **artes não entram na licença** (veja [LICENCA-ARTES.md](LICENCA-ARTES.md)). Os personagens são inspirados em pessoas reais da comunidade Creia, então nomes, imagens, sprites, fundos, vídeo de abertura, músicas e falas são todos os direitos reservados. Para criar o seu jogo, use o motor com as suas próprias artes.
