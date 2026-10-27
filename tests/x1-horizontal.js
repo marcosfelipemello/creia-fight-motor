@@ -2,8 +2,13 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 let harness=fs.readFileSync(path.join(__dirname,'cardoso.js'),'utf8').split('const c=client();')[0];
 harness=harness.replace('return {api:env.__bangu,textSeen,','return {env,api:env.__bangu,textSeen,hold(code,n){events.keydown({code,preventDefault:noop});this.tick(n);events.keyup({code});},');
-const read=fs.readFileSync.bind(fs),gameFile=path.resolve(__dirname,'../js/game.js');
-fs.readFileSync=function(file,...args){const source=read(file,...args);return path.resolve(String(file))===gameFile?source.replace('  window.__bangu = {',`  window.__horizontal={predict:predictGuest,online:function(o){online=o;}};\n  window.__bangu = {`):source;};
+const read=fs.readFileSync.bind(fs),gameFile=path.resolve(__dirname,'../js/game.js'),configFile=path.resolve(__dirname,'../js/combate-config.js');
+fs.readFileSync=function(file,...args){
+ const source=read(file,...args),abs=path.resolve(String(file));
+ // Teste de mecânica: neutraliza multiplicador de equilíbrio de dano do X1
+ if(abs===configFile)return source.replace('api.resistenciaX1={','api.resistenciaX1Off={');
+ return abs===gameFile?source.replace('  window.__bangu = {',`  window.__horizontal={predict:predictGuest,online:function(o){online=o;}};\n  window.__bangu = {`):source;
+};
 try{
  const client=new Function('require','__dirname',harness+'\nreturn client;')(require,__dirname);
  function duel(facing=1){const g=client();g.api.startTeam([{who:'lutador',ctl:0},{who:'duda',ctl:1}],false,true);g.until(()=>g.api.state.round.phase==='fight',150);const p=g.api.state.players[0],q=g.api.state.players[1];p.x=g.api.state.cam+(facing>0?100:380);p.facing=facing;q.x=p.x+facing*130;q.facing=-facing;p.y=q.y=215;q.inv=0;q.shield=0;return g;}

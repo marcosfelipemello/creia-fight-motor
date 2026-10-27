@@ -605,6 +605,8 @@
       if (n === 'torso' && pose.keys) drawKeys(c, pose.keys);
       if (n === 'torso' && pose.book) { c.save(); c.translate(pose.book.x, pose.book.y); c.rotate(-0.12); drawBook(c, true, pose.book.t); c.restore(); }
       if (n === (M.parts.armF2 ? 'armF2' : 'armF') && pose.prop) drawProp(c, who, pose.prop, k, n === 'armF2' ? M.parts : null, pose);
+      var fo = o && o.boca != null ? o : window.Rig.falando && window.Rig.falando.who === who ? window.Rig.falando : null;   // quem está falando agora (culto)
+      if (n === 'head' && fo && BOCA[who]) { c.save(); c.scale(k, k); c.translate(-part.pivot[0], -part.pivot[1]); falaFace(c, BOCA[who], fo.boca, fo.vogal, img, part); c.restore(); }
       if (n === 'head' && pose.scream) { c.save(); c.scale(k, k); c.translate(-part.pivot[0], -part.pivot[1]); screamFace(c, pose.scream); c.restore(); }
       if (n === 'head' && (pose.kiss || (o && o.mark))) {   // rosto desenhado por cima, em px da peça
         c.scale(k, k); c.translate(-part.pivot[0], -part.pivot[1]);
@@ -617,6 +619,32 @@
   }
 
   function ell(c, x, y, rx, ry, col) { c.fillStyle = col; c.beginPath(); c.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2); c.fill(); }
+  // boca falando (apresentadores do culto), em px da peça da cabeça: x,y = centro da boca na arte, w/h = abertura máxima;
+  // pele = arte que já é de boca aberta (Lucas gritando): fecha com os pixels do próprio bigode e do queixo,
+  // que se afastam conforme a boca abre e revelam os dentes e a língua da arte original
+  var BOCA = { bispo: { x: 86, y: 122, w: 11, h: 9 }, arthur: { x: 80, y: 101, w: 12, h: 8 },
+    lucas: { pele: { x0: 50, x1: 81, top: 84, mid: 95, bot: 106, cima: [80, 84], baixo: [106, 110], min: 0.55 } } };   // Lucas fala gritando: nunca fecha de todo
+  function falaFace(c, b, a, v, img, part) {
+    a = Math.max(0, Math.min(1, a || 0));
+    if (b.pele) {
+      if (!img || !part) return;
+      var p = b.pele; a = (p.min || 0) + (1 - (p.min || 0)) * a;
+      var w = p.x1 - p.x0, hu = (p.mid - p.top) * (1 - a), hd = (p.bot - p.mid) * (1 - a);
+      c.save(); c.imageSmoothingEnabled = true;   // esticar suave: vira barba contínua, sem faixas
+      if (hu > 0.3) c.drawImage(img, part.x + p.x0, part.y + p.cima[0], w, p.cima[1] - p.cima[0], p.x0, p.top, w, hu);
+      if (hd > 0.3) c.drawImage(img, part.x + p.x0, part.y + p.baixo[0], w, p.baixo[1] - p.baixo[0], p.x0, p.bot - hd, w, hd);
+      if (a < 0.3) { c.fillStyle = '#3b1420'; c.fillRect(p.x0 + 4, p.top + hu - 0.5, w - 8, 1.2); }   // lábios se encontrando
+      c.restore(); return;
+    }
+    if (a < 0.05) return;
+    var rx = b.w * (v === 'o' || v === 'u' ? 0.62 : v === 'e' || v === 'i' ? 1 : 0.85), ry = b.h * a * (v === 'e' || v === 'i' ? 0.6 : 1), cy = b.y + ry * 0.35;
+    ell(c, b.x, cy, rx + 1.5, ry + 1.5, '#7a2d2f');   // lábio
+    ell(c, b.x, cy, rx, ry, '#2b0d12');                // fundo da boca
+    c.save(); c.beginPath(); c.ellipse(b.x, cy, rx, ry, 0, 0, Math.PI * 2); c.clip();
+    if (ry > 3) { c.fillStyle = '#f2ece4'; c.fillRect(b.x - rx, cy - ry, rx * 2, Math.min(3, ry * 0.4)); }   // dentes de cima
+    ell(c, b.x, cy + ry * 0.75, rx * 0.6, ry * 0.45, '#c2565c');   // língua
+    c.restore();
+  }
   // Nutri de perfil no beijo (olhando para +x). Desenhada uma vez em px da arte (mesma densidade da peça
   // da cabeça) e guardada num canvas; coordenadas no espaço da peça 'head' (pivô do pescoço em ~111,136).
   var PROF = null, PROF_OX = 10, PROF_OY = 10;
@@ -999,12 +1027,14 @@
       return true;
     },
     // corpo inteiro direto no ctx (nítido em qualquer escala), para o corte do especial
-    big: function (ctx, who, state, t, x, y, facing, s) {
+    big: function (ctx, who, state, t, x, y, facing, s, o) {   // o opcional: { boca: 0..1, vogal } para falar
       if (!this.ready(who)) return false;
       ctx.save(); ctx.translate(x, y); ctx.scale(s * (facing < 0 ? -1 : 1), s); ctx.imageSmoothingEnabled = true;
-      compose(ctx, who, state, t || 0); ctx.restore();
+      compose(ctx, who, state, t || 0, o); ctx.restore();
       return true;
     },
+    falando: null,   // { who, boca: 0..1, vogal }: as artes revisadas (Bispo) também leem daqui
+    falaFace: function (c, b, a, v) { falaFace(c, b, a, v); },
     // retrato do HUD: cabeça recortada, 28x28 a partir do canto (x,y)
     portrait: function (ctx, who, x, y) {
       var n = portraitOrder.indexOf(who);

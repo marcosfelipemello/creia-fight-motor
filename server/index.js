@@ -10,10 +10,12 @@ const HOST = '127.0.0.1';
 const PORT = Number(process.env.BANGU_PORT || 8790);
 const DATA_DIR = process.env.BANGU_DATA_DIR || path.join(__dirname, 'data');
 const DATA_FILE = path.join(DATA_DIR, 'ranking.json');
+const ESCALADA_DATA_FILE = path.join(DATA_DIR, 'ranking-escalada.json');
+const COOP_DATA_FILE = path.join(DATA_DIR, 'ranking-coop.json');
 const MAX_MESSAGE = 8192;
 const MAX_ROOMS = 512;
-const WAIT_TIMEOUT = 180000;
-const FIGHT_TIMEOUT = 60000;
+const WAIT_TIMEOUT = 195000; // 3 min fora do app + 15 s para retomar a conexão.
+const FIGHT_TIMEOUT = WAIT_TIMEOUT;
 const ROOM_MAX_AGE = 2 * 60 * 60 * 1000;
 const SCORE_CAP = 3000000; // 10 fases: ~400 lacaios, 11.160 HP de chefes, bônus de 2.000 por fase; multiplicador <=4.
 const CHARACTERS = new Set(['nutri','lutador','emanuelly','enzo','pedro','naju','grazi','bispo',
@@ -21,6 +23,8 @@ const CHARACTERS = new Set(['nutri','lutador','emanuelly','enzo','pedro','naju',
 const rooms = new Map();
 const scoreRate = new Map();
 let ranking = [];
+let coopRanking = [];
+let escaladaRanking = [];
 let writing = Promise.resolve();
 
 function json(res, status, data) {
@@ -44,20 +48,50 @@ async function loadRanking() {
   } catch (err) {
     if (err.code !== 'ENOENT') { console.error('Ranking inválido:', err); throw err; }
   }
+  try { coopRanking=JSON.parse(await fs.readFile(COOP_DATA_FILE,'utf8')); if(!Array.isArray(coopRanking))throw Error('Ranking coop inválido'); } catch(err){if(err.code!=='ENOENT')throw err;}
+  // O arquivo antigo fica intacto; a união também evita duplicá-lo na próxima carga.
+  const unique=new Map(ranking.concat(coopRanking).map(row=>[JSON.stringify([row.modo||'',row.name,row.score,row.stage,row.character,row.team,row.at]),row]));
+  ranking=Array.from(unique.values()).sort((a,b)=>b.score-a.score||a.at-b.at).slice(0,100);
+  try {
+    const parsed = JSON.parse(await fs.readFile(ESCALADA_DATA_FILE, 'utf8'));
+    if (!Array.isArray(parsed)) throw new Error('ranking-escalada.json não é uma lista');
+    escaladaRanking = parsed.filter(row => row && typeof row.name === 'string' && Number.isInteger(row.degrau))
+      .sort((a,b) => b.degrau-a.degrau || a.at-b.at).slice(0,100);
+  } catch (err) {
+    if (err.code !== 'ENOENT') { console.error('Ranking escalada inválido:', err); throw err; }
+  }
 }
 function scoreBody(raw) {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   if (typeof raw.name !== 'string') return null;
   const name = raw.name.normalize('NFC').trim().replace(/ +/g, ' ');
   if (Array.from(name).length < 1 || Array.from(name).length > 12 || !/^[\p{L}\p{N} ]+$/u.test(name)) return null;
-  if (!Number.isSafeInteger(raw.score) || raw.score < 1 || raw.score > SCORE_CAP) return null;
+  if (!CHARACTERS.has(raw.character)) return null;
+  if (raw.modo === 'escalada') {
+    if (!Number.isInteger(raw.degrau) || raw.degrau < 0 || raw.degrau > 19) return null;
+    return { name, modo: 'escalada', degrau: raw.degrau, character: raw.character, at: Date.now() };
+  }
+  if (!Number.isSafeInteger(raw.score) || raw.score < 0 || raw.score > SCORE_CAP) return null;
   if (!Number.isInteger(raw.stage) || raw.stage < 1 || raw.stage > 10) return null;
   if (raw.score > raw.stage * 300000) return null;
-  if (!CHARACTERS.has(raw.character)) return null;
+  if(raw.modo==='coop'){
+    if(!Array.isArray(raw.team)||raw.team.length<2||raw.team.length>4||new Set(raw.team).size!==raw.team.length||!raw.team.every(w=>CHARACTERS.has(w)))return null;
+    return {name,modo:'coop',team:raw.team.slice(),score:raw.score,stage:raw.stage,character:raw.character,at:Date.now()};
+  }
   return { name, score:raw.score, stage:raw.stage, character:raw.character, at:Date.now() };
 }
 function saveScore(row) {
   writing = writing.catch(err => { console.error('Falha anterior de gravação:', err); }).then(async () => {
+    if (row.modo === 'escalada') {
+      const next = escaladaRanking.concat(row).sort((a,b) => b.degrau-a.degrau || a.at-b.at).slice(0,100);
+      const temp = path.join(DATA_DIR, '.ranking-escalada-' + process.pid + '-' + crypto.randomBytes(6).toString('hex') + '.tmp');
+      try {
+        await fs.writeFile(temp, JSON.stringify(next));
+        await fs.rename(temp, ESCALADA_DATA_FILE);
+        escaladaRanking = next;
+      } catch (err) { await fs.unlink(temp).catch(() => {}); throw err; }
+      return;
+    }
     const next = ranking.concat(row).sort((a,b) => b.score-a.score || a.at-b.at).slice(0,100);
     const temp = path.join(DATA_DIR, '.ranking-' + process.pid + '-' + crypto.randomBytes(6).toString('hex') + '.tmp');
     try {
@@ -90,6 +124,10 @@ const server = http.createServer(async (req,res) => {
   }
   if (req.method === 'GET' && url.pathname === '/api/characters') return json(res,200,{characters:Array.from(CHARACTERS)});
   if (req.method === 'GET' && url.pathname === '/api/ranking') {
+    if(url.searchParams.get('modo')==='coop')return json(res,200,{ranking:ranking.filter(row=>row.modo==='coop').slice(0,10).map(({name,score,stage,team})=>({name,score,stage,team}))});
+    if (url.searchParams.get('modo') === 'escalada') {
+      return json(res,200,{ ranking: escaladaRanking.slice(0,10).map(({name,degrau,character}) => ({name,degrau,character})) });
+    }
     return json(res,200,{ ranking: ranking.slice(0,10).map(({name,score,stage,character}) => ({name,score,stage,character})) });
   }
   if (req.method === 'POST' && url.pathname === '/api/score') {
@@ -145,7 +183,7 @@ function send(peer,value) {
       const previous=peer.realtime[value.type];
       if (value.type==='input' && previous && value.input.matchId===previous.input.matchId) {
         value={type:'input',input:{...value.input}};
-        for (const k of ['atk','jump','spc','alt','use']) value.input[k] ||= previous.input[k];
+        for (const k of ['atk','jump','spc','alt','use','taunt']) value.input[k] ||= previous.input[k];
       }
       peer.realtime[value.type]=value;
       if (!peer.realtimeTimer) scheduleRealtime(peer);
@@ -184,8 +222,9 @@ function expireRoom(room) {
 function expireRooms(now=Date.now()) {
   for (const room of rooms.values()) {
     const timeout=room.started ? FIGHT_TIMEOUT : WAIT_TIMEOUT;
+    if(room.mode==='coop'&&room.started&&room.host.peer&&room.guest&&room.guest.awayAt!==null&&now-room.guest.awayAt>=timeout)room.guest.expired=true;
     if (now-room.createdAt>ROOM_MAX_AGE ||
-        [room.host,room.guest].some(slot=>slot && slot.awayAt!==null && now-slot.awayAt>=timeout)) expireRoom(room);
+        [room.host,room.guest].some((slot,i)=>slot && slot.awayAt!==null && now-slot.awayAt>=timeout && !(i===1&&room.mode==='coop'&&room.started&&room.host.peer))) expireRoom(room);
   }
 }
 function close(peer,status=1000) {
@@ -206,6 +245,7 @@ function relay(peer,msg) {
   const host=peer.role==='host';
   if (msg.type==='choice' && typeof msg.who==='string' && CHARACTERS.has(msg.who)) {
     if(room.started||(room.selecting&&msg.matchId!==room.matchId))return;
+    if(room.mode==='coop'&&other&&other.choice===msg.who)return send(peer,{type:'choice',who:other.choice});
     slotOf(peer).choice=msg.who;
     return send(other && other.peer,{type:'choice',who:msg.who});
   }
@@ -232,40 +272,42 @@ function relay(peer,msg) {
     if(msg.input.matchId!=null && msg.input.matchId!==room.matchId)return;
     const input={x,y};if(msg.input.matchId!=null)input.matchId=msg.input.matchId;
     if (Number.isSafeInteger(msg.input.seq) && msg.input.seq>=0 && msg.input.seq<1000000000) input.seq=msg.input.seq;
-    for (const k of ['atk','jump','spc','alt','use']) input[k]=msg.input[k]===true;
+    if(room.mode==='coop'&&Number.isSafeInteger(msg.input.metaAck))input.metaAck=msg.input.metaAck;
+    for (const k of ['atk','jump','spc','alt','use','taunt']) input[k]=msg.input[k]===true;
     return send(other.peer,{type:'input',input});
   }
   if (host && msg.type==='snapshot' && msg.state && typeof msg.state==='object') {
     if(!room.started)return;
     if(msg.state.matchId!=null && msg.state.matchId!==room.matchId)return;
-    room.snapshot=msg.state; return send(other.peer,{type:'snapshot',state:msg.state});
+    if(room.mode==='coop'){if(msg.state.meta)room.coopMeta=msg.state.meta;room.snapshot={...msg.state,meta:room.coopMeta};}else room.snapshot=msg.state; return send(other.peer,{type:'snapshot',state:msg.state});
   }
-  if (host && msg.type==='start' && Array.isArray(msg.team) && msg.team.length===2 && msg.team.every(w=>CHARACTERS.has(w))) {
+  if (host && msg.type==='start' && Array.isArray(msg.team) && (room.mode==='coop'?msg.team.length>=2&&msg.team.length<=4:msg.team.length===2) && msg.team.every(w=>CHARACTERS.has(w))) {
+    if(room.mode==='coop'&&(msg.mode!=='coop'||msg.stage!==1||new Set(msg.team).size!==msg.team.length||msg.team[0]!==room.host.choice||msg.team[1]!==room.guest.choice))return;
     if(room.selecting&&(!room.host.choice||!room.guest.choice||room.host.choice===room.guest.choice||msg.team[0]!==room.host.choice||msg.team[1]!==room.guest.choice))return;
     if(room.started && !(room.finished&&room.votes&&room.votes.host&&room.votes.guest))return;
     room.matchId=(room.matchId||0)+1;room.finished=false;room.votes={};room.snapshot=null;
-    room.started=true;room.selecting=false; room.team=msg.team;send(peer,{type:'match-started',matchId:room.matchId});
-    return send(other.peer,{type:'start',team:msg.team,matchId:room.matchId});
+    room.started=true;room.selecting=false; room.team=msg.team;room.stage=msg.stage||1;send(peer,{type:'match-started',matchId:room.matchId});
+    return send(other.peer,{type:'start',team:msg.team,mode:room.mode,stage:room.stage,matchId:room.matchId});
   }
   if (host && msg.type==='result' && room.started && (msg.matchId==null||msg.matchId===room.matchId)) {room.finished=true;room.winner=msg.winner===0||msg.winner===1?msg.winner:null;return send(other.peer,{type:'result',matchId:room.matchId,winner:msg.winner===0||msg.winner===1?msg.winner:null});}
 }
 function message(peer,msg) {
   if (!msg || typeof msg!=='object' || Array.isArray(msg)) return;
   expireRooms();
-  if (msg.type==='leave' && peer.room) { expireRoom(peer.room); return; }
+  if (msg.type==='leave' && peer.room) { if(peer.role==='guest'&&peer.room.mode==='coop'&&peer.room.started)close(peer);else expireRoom(peer.room); return; }
   if (msg.type==='create' && !peer.room) {
     if (rooms.size>=MAX_ROOMS) return send(peer,{type:'error',message:'SERVIDOR CHEIO'});
     const id=code(), token=crypto.randomBytes(32).toString('hex');
-    const room={code:id,host:{peer,token,choice:null,awayAt:null},guest:null,started:false,team:null,snapshot:null,createdAt:Date.now()};
+    const room={code:id,mode:msg.mode==='coop'?'coop':'x1',host:{peer,token,choice:null,awayAt:null},guest:null,started:false,team:null,snapshot:null,createdAt:Date.now()};
     rooms.set(id,room); peer.room=room; peer.role='host';
-    return send(peer,{type:'created',code:id,token});
+    return send(peer,{type:'created',code:id,token,mode:room.mode});
   }
   if (msg.type==='join' && !peer.room) {
     const id=String(msg.code||'').toUpperCase(), room=rooms.get(id);
-    if (!room || room.guest || room.host.peer===peer) return send(peer,{type:'error',message:'SALA INDISPONÍVEL'});
+    if (!room || room.mode!==(msg.mode==='coop'?'coop':'x1') || room.guest || room.host.peer===peer) return send(peer,{type:'error',message:'SALA INDISPONÍVEL'});
     const token=crypto.randomBytes(32).toString('hex');
     room.guest={peer,token,choice:null,awayAt:null}; peer.room=room; peer.role='guest';
-    send(peer,{type:'joined',code:id,token}); send(room.host.peer,{type:'peer'});
+    send(peer,{type:'joined',code:id,token,mode:room.mode}); send(room.host.peer,{type:'peer'});
     if (!room.host.peer) send(peer,{type:'away'});
     return;
   }
@@ -275,16 +317,17 @@ function message(peer,msg) {
     let role=null;
     if (room && supplied) for (const name of ['host','guest']) {
       const slot=room[name];
-      if (slot && crypto.timingSafeEqual(Buffer.from(slot.token,'hex'),supplied)) role=name;
+      if (slot && !slot.expired && crypto.timingSafeEqual(Buffer.from(slot.token,'hex'),supplied)) role=name;
     }
     if (!role) return send(peer,{type:'error',message:'SALA INDISPONÍVEL'});
     const slot=room[role], old=slot.peer, other=otherSlot(room,role);
     if (old && old!==peer) { old.room=null; old.role=null; close(old); }
     slot.peer=peer; slot.awayAt=null; peer.room=room; peer.role=role;
-    send(peer,{type:'resumed',code:id,role,token:slot.token,peerReady:!!other,otherAway:!!other&&!other.peer,
+    send(peer,{type:'resumed',code:id,mode:room.mode,stage:room.stage,role,token:slot.token,peerReady:!!other,otherAway:!!other&&!other.peer,
       started:room.started,selecting:!!room.selecting,matchId:room.matchId,finished:!!room.finished,winner:room.winner,rematchSelf:!!(room.votes&&room.votes[role]),rematchOther:!!(room.votes&&room.votes[role==='host'?'guest':'host']),selfMode:room.votes&&room.votes[role],otherMode:room.votes&&room.votes[role==='host'?'guest':'host'],choice:slot.choice,otherChoice:other&&other.choice,team:room.team,snapshot:room.snapshot});
     send(other && other.peer,{type:'back'});
     if (role==='host' && other) send(peer,{type:'peer'});
+    if(room.mode==='coop'&&role==='guest'&&other&&other.peer)send(other.peer,{type:'peer'});
     return;
   }
   relay(peer,msg);
@@ -351,4 +394,4 @@ if (require.main === module) {
     .catch(err=>{console.error(err);process.exitCode=1;});
 }
 module.exports = { server, scoreBody, loadRanking, saveScore, message, receive, close, rooms,
-  expireRooms, getRanking: () => ranking };
+  expireRooms, getRanking: () => ranking, getEscaladaRanking: () => escaladaRanking };

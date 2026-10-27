@@ -5,6 +5,8 @@ let harness=read(path.join(__dirname,'cardoso.js'),'utf8').split('const c=client
 harness=harness.replace('return {api:env.__bangu,textSeen,','return {env,events,api:env.__bangu,textSeen,');
 fs.readFileSync=function(file,...args){
   const abs=path.resolve(String(file)),data=read(file,...args);
+  // Teste de mecânica: neutraliza multiplicador de equilíbrio de dano do X1
+  if(abs===path.join(root,'js/combate-config.js'))return data.replace('api.resistenciaX1={','api.resistenciaX1Off={');
   if(abs===path.join(root,'js/rig.js'))return data+'\n'+['fidelis-visual','artes-fidelis-v1','fidelis-audio'].map(n=>read(path.join(root,'js',n+'.js'),'utf8')).join('\n');
   if(abs===path.join(root,'js/game.js'))return data.replace('  window.__bangu = {','  window.__fidTest={get cine(){return cine;},duration:cineDuration,predict:predictGuest,reset:resetGuestPrediction,advance:advanceFidelis,snapshot:onlineSnapshot,online:function(o){online=o;}};\n  window.__bangu = {');
   return data;

@@ -6,6 +6,8 @@ const harness=read(path.join(__dirname,'cardoso.js'),'utf8').split('const c=clie
   .replace('return {api:env.__bangu,textSeen,','return {env,events,api:env.__bangu,textSeen,').replace('clock+=1000/60','clock+=1000/(env.__fps||60)');
 fs.readFileSync=function(file,...args){
   const data=read(file,...args);
+  // Teste de mecânica: neutraliza multiplicador de equilíbrio de dano do X1
+  if(path.resolve(String(file))===path.join(root,'js/combate-config.js'))return data.replace('api.resistenciaX1={','api.resistenciaX1Off={');
   if(path.resolve(String(file))===path.join(root,'js/game.js'))return data.replace('  window.__bangu = {',`
   window.__combatTest={poll:pollPads,control:humanControl,open:openSelect,team:selTeam,
     get selection(){return sel;},get paused(){return paused;},get pads(){return pads;},
@@ -36,7 +38,7 @@ try{
     a.pvp();a.open(true);c.tick();const before=a.selection.slots[0].cur;
     xbox.axes[0]=1;c.tick();assert.notEqual(a.selection.slots[0].cur,before);xbox.axes[0]=0;c.tick();
     tap(c,xbox,0);assert(a.selection.slots[0].lock);tap(c,ps5,0);assert(a.selection.slots[1].on);tap(c,ps5,0);assert(a.selection.slots[1].lock);
-    assert.deepEqual(Array.from(a.team(),p=>p.ctl),[0,1]);tap(c,xbox,9);assert(a.selection.vsT>=0);
+    assert.deepEqual(Array.from(a.team(),p=>p.ctl),[0,1]);tap(c,xbox,9);tap(c,xbox,0);assert(a.selection.vsT>=0);
     c.until(()=>c.api.state.scene==='play',200);c.until(()=>c.api.state.round.phase==='fight',160);
     tap(c,xbox,9);assert(a.paused,'Menu não pausou');tap(c,xbox,9);assert(!a.paused,'Menu não retomou');
     gps=[];a.poll();assert(a.pads.every(p=>!Object.values(p.held).some(Boolean)));
@@ -46,7 +48,7 @@ try{
   for(const vs of [false,true]){
     const c=client(),a=c.env.__combatTest,xbox=device(0,'Xbox'),ps5=device(1,'DualSense');c.env.navigator.getGamepads=()=>[xbox,ps5];a.pvp();a.open(vs);c.tick();
     c.key('KeyJ');
-    if(vs){tap(c,xbox,9);tap(c,xbox,0);assert.equal(a.pads[0].slot,1);assert.equal(new Set(a.pads.map(p=>p.slot)).size,4,'controles duplicaram o jogador');tap(c,xbox,9);assert(a.selection.vsT>=0);}
+    if(vs){tap(c,xbox,9);tap(c,xbox,0);assert.equal(a.pads[0].slot,1);assert.equal(new Set(a.pads.map(p=>p.slot)).size,4,'controles duplicaram o jogador');tap(c,xbox,9);tap(c,xbox,0);assert(a.selection.vsT>=0);}
     else{
       c.key('Numpad1');c.key('Numpad1');tap(c,xbox,9);tap(c,xbox,0);tap(c,ps5,9);tap(c,ps5,0);
       assert.deepEqual(Array.from(a.team(),p=>p.ctl),[0,1,2,3]);assert.equal(a.pads[0].slot,2);assert.equal(a.pads[1].slot,3);

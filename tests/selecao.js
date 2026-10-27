@@ -37,7 +37,7 @@ function client() {
 }
 const coop=client();coop.tick();
 assert(coop.texts.includes('Creia Fight'));
-coop.key('KeyS');coop.key('Enter');
+coop.key('KeyS');coop.key('Enter');assert.equal(coop.state.scene,'adventuremenu');coop.key('Enter');
 for(let i=0;i<4;i++) {
   coop.key('KeyJ');
   assert.equal(coop.sel.slots[0].cur,i<3?i+1:coop.test.roster.length);
@@ -45,18 +45,18 @@ for(let i=0;i<4;i++) {
   assert.equal(coop.sel.vsT,-1,'seleção iniciou a partida sem confirmar');
 }
 coop.go();assert(coop.sel.vsT>=0);
-const early=client();early.key('KeyS');early.key('Enter');early.portrait(3);
+const early=client();early.key('KeyS');early.key('Enter');early.key('Enter');early.portrait(3);
 assert.equal(early.sel.slots[0].pick,3);
 assert.equal(early.sel.slots[0].cur,4);
 early.go();assert(early.sel.vsT>=0,'clique em INICIAR não aceitou time de um lutador');
-const mouse=client();mouse.key('KeyS');mouse.key('Enter');
+const mouse=client();mouse.key('KeyS');mouse.key('Enter');mouse.key('Enter');
 for(let i=0;i<4;i++)mouse.portrait(i);
 assert.equal(mouse.sel.slots[0].cur,mouse.test.roster.length);
 assert.equal(mouse.sel.ai.length,3);
 const x1=client();x1.key('Enter');x1.key('Enter');
 x1.portrait(0);x1.go();assert.equal(x1.sel.vsT,-1,'X1 começou sem adversário');
 x1.portrait(1);assert.equal(x1.sel.slots[0].cur,x1.test.roster.length);
-x1.key('Enter');assert(x1.sel.vsT>=0);
+x1.key('Enter');x1.key('Enter');assert(x1.sel.vsT>=0);   // segundo Enter: escolha do cenário
 const p2=client();p2.key('Enter');p2.key('KeyD');p2.key('Enter');
 p2.key('KeyJ');p2.key('Comma');p2.key('Comma');
 assert.equal(p2.sel.slots[0].cur,p2.test.roster.length,'P2 não direcionou P1 para INICIAR');

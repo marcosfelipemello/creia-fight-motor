@@ -44,7 +44,10 @@ function createClient() {
   env.window = env;
   vm.createContext(env);
   for (const name of scripts) {
-    vm.runInContext(fs.readFileSync(path.join(root, 'js', name + '.js'), 'utf8'), env, { filename: name + '.js' });
+    let code = fs.readFileSync(path.join(root, 'js', name + '.js'), 'utf8');
+    // Teste de mecânica: neutraliza multiplicador de equilíbrio de dano do X1
+    if (name === 'combate-config') code = code.replace('api.resistenciaX1={', 'api.resistenciaX1Off={');
+    vm.runInContext(code, env, { filename: name + '.js' });
   }
   return {
     api: env.__bangu, textSeen, events,

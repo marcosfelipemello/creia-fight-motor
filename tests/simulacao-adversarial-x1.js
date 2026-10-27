@@ -156,7 +156,7 @@ async function runAdversarialSim() {
   }
 
   // 1. Conexão e Seleção de Personagens: Host = Nutri, Guest = Lutador
-  key(host, 'KeyS'); key(host, 'Enter'); key(host, 'KeyS'); key(host, 'Enter');
+  key(host, 'Enter'); key(host, 'KeyD'); key(host, 'KeyD'); key(host, 'KeyD'); key(host, 'Enter');
   for (let i = 0; i < 10; i++) sim.step(host, guest);
   guest.transport.join(host.transport.code);
   for (let i = 0; i < 15; i++) sim.step(host, guest);

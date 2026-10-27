@@ -64,7 +64,7 @@ env.CreiaSettings.sync({open:false,online:{result:0,self:false,other:false,remat
 env.CreiaSettings.sync({open:false,online:{result:0,self:true,other:false,rematch(){throw Error('voto duplicado');},metrics:{}}});assert.equal(result.querySelector('button').disabled,true);
 console.log('Ajustes: sliders, editor/arraste/reset/rotação, tamanho real, resultado e diagnóstico: OK (DOM simulado)');
 env.CreiaSettings.sync({open:true,mobile:false});
-const keyboard=document.body.querySelector('.keyboard-grid'),keyButtons=keyboard.querySelectorAll('button');assert.equal(keyButtons.length,18);
+const keyboard=document.body.querySelector('.keyboard-grid'),keyButtons=keyboard.querySelectorAll('button');assert.equal(keyButtons.length,18);   // 9 ações x 2 jogadores (provocação desligada)
 const attackKey=keyButtons.find(b=>b.dataset.player==='0'&&b.dataset.action==='atk');attackKey.click();
 events['doc:keydown']({key:'t',code:'KeyT',preventDefault(){},stopPropagation(){}});assert.equal(P.bindings()[0].atk[0],'KeyT');assert.equal(attackKey.textContent,'T');
 attackKey.click();events['doc:keydown']({key:'p',code:'KeyP',preventDefault(){},stopPropagation(){}});assert.equal(P.bindings()[0].atk[0],'KeyT');

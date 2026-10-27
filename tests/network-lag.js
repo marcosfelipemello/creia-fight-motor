@@ -20,6 +20,7 @@ async function main() {
   const host=client(),guest=client();
   relay.message(host.peer,{type:'create'});
   relay.message(guest.peer,{type:'join',code:host.messages[0].code});
+  relay.message(host.peer,{type:'start',team:['bispo','lucas']});
   const snapshot=n=>({type:'snapshot',state:{time:n,padding:'x'.repeat(6000)}});
   // TCP pode juntar várias mensagens válidas num único evento data.
   const batch=Buffer.concat([frame(snapshot(1)),frame(snapshot(2)),frame(snapshot(3))]);

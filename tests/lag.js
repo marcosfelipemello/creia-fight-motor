@@ -61,7 +61,7 @@ function client() {
 const host=client(),guest=client();
 function step(){clock+=process.env.LAG_JITTER?[10,23,14,20][frameNumber++%4]:frameMs;pump();host.frame();guest.frame();pump();}
 function key(c,code){c.events.keydown({code,preventDefault:noop});step();c.events.keyup({code});}
-key(host,'Enter');key(host,'KeyS');key(host,'Enter');
+key(host,'Enter');key(host,'KeyD');key(host,'KeyD');key(host,'KeyD');key(host,'Enter');
 guest.transport.join(host.transport.code);
 key(host,'Enter');key(guest,'KeyD');key(guest,'Enter');
 for(let i=0;i<240&&(!host.state.round||host.state.round.phase!=='fight');i++)step();

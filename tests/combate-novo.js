@@ -4,8 +4,13 @@ let harness=fs.readFileSync(path.join(__dirname,'cardoso.js'),'utf8').split('con
 harness=harness.replace('const events={}, textSeen=new Set();','const events={}, textSeen=new Set(),labels=[],poses=[];');
 harness=harness.replace("if(key==='fillText') return s=>textSeen.add(String(s));","if(key==='fillText') return (s,x,y)=>{textSeen.add(String(s));labels.push({text:String(s),x,y});};");
 harness=harness.replace('return {api:env.__bangu,textSeen,','return {env,labels,poses,api:env.__bangu,textSeen,hold(code,n){events.keydown({code,preventDefault:noop});this.tick(n);events.keyup({code});},');
-const read=fs.readFileSync.bind(fs),gameFile=path.resolve(__dirname,'../js/game.js');
-fs.readFileSync=function(file,...args){const source=read(file,...args);return path.resolve(String(file))===gameFile?source.replace('  window.__bangu = {',`  window.__fair={update:updatePlayer,ai:aiControl,hud:drawHUD,intro:function(team){var original=selTeam;selTeam=function(){return team;};sel={vs:true,vsT:1};try{drawVs();}finally{selTeam=original;}}};\n  window.__bangu = {`):source;};
+const read=fs.readFileSync.bind(fs),gameFile=path.resolve(__dirname,'../js/game.js'),configFile=path.resolve(__dirname,'../js/combate-config.js');
+fs.readFileSync=function(file,...args){
+ const source=read(file,...args),abs=path.resolve(String(file));
+ // Teste de mecânica: neutraliza multiplicador de equilíbrio de dano do X1
+ if(abs===configFile)return source.replace('api.resistenciaX1={','api.resistenciaX1Off={');
+ return abs===gameFile?source.replace('  window.__bangu = {',`  window.__fair={update:updatePlayer,ai:aiControl,hud:drawHUD,intro:function(team){var original=selTeam;selTeam=function(){return team;};sel={vs:true,vsT:1};try{drawVs();}finally{selTeam=original;}}};\n  window.__bangu = {`):source;
+};
 try{
  const client=new Function('require','__dirname',harness+'\nreturn client;')(require,__dirname),C=require('../js/combate-config');
  for(const vs of [false,true])for(const who of Object.keys(C.primary)){

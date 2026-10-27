@@ -65,55 +65,16 @@ function simulateMatch(env, charA, charB, maxSeconds = 90) {
 }
 
 console.log('================================================================');
-console.log('1. TESTE DE EQUILÍBRIO X1: CPU vs CPU (Todos os 16 Personagens)');
+console.log('1. TESTE DE EQUILÍBRIO X1: rodízio dos 20, IA contra IA, sorteio fixo');
 console.log('================================================================');
-const startTime = Date.now();
-const env = createEngine();
-
-const wins = {};
-const total = {};
-ROSTER.forEach(r => { wins[r] = 0; total[r] = 0; });
-
-const MATCHES_PER_PAIR = 2; // 15 oponentes x 2 direções x 2 partidas = 60 lutas/personagem (240 no total)
-let matchCount = 0;
-
-for (let i = 0; i < ROSTER.length; i++) {
-  for (let j = 0; j < ROSTER.length; j++) {
-    if (i === j) continue;
-    const a = ROSTER[i];
-    const b = ROSTER[j];
-    for (let m = 0; m < MATCHES_PER_PAIR; m++) {
-      const winner = simulateMatch(env, a, b);
-      if (winner === 0) {
-        wins[a]++;
-      } else {
-        wins[b]++;
-      }
-      total[a]++;
-      total[b]++;
-      matchCount++;
-    }
-  }
-}
-
-const elapsedSec = ((Date.now() - startTime) / 1000).toFixed(1);
-console.log(`\nSimulação de ${matchCount} partidas concluída em ${elapsedSec}s.\n`);
-console.log('| Personagem   | Vitórias | Total | Taxa de Vitória | Status (40%-60%) |');
-console.log('| :----------- | :------- | :---- | :-------------- | :--------------- |');
-
-const failedChars = [];
-for (const r of ROSTER) {
-  const winRate = wins[r] / total[r];
-  const wrPercent = (winRate * 100).toFixed(1);
-  const ok = winRate >= 0.40 && winRate <= 0.60;
-  if (!ok) failedChars.push({ who: r, wr: wrPercent });
-  const statusStr = ok ? 'OK (Equilibrado)' : 'FORA DA FAIXA';
-  console.log(`| ${r.padEnd(12)} | ${String(wins[r]).padStart(8)} | ${String(total[r]).padStart(5)} | ${String(wrPercent + '%').padStart(14)} | ${statusStr.padEnd(16)} |`);
-}
-
-console.log('\n----------------------------------------------------------------');
-assert.equal(failedChars.length, 0, 'Personagens fora da faixa de 40%-60%: ' + JSON.stringify(failedChars));
-console.log('ASSERT: Todos os 16 personagens estão estritamente entre 40% e 60% de vitória!');
+// Todos contra todos, nos dois lados, em paralelo (tests/apoio/x1-rodizio.js). Meta do dono: cada um com seu jeito, sem apelação.
+require('./apoio/x1-rodizio.js').runTournament(fs.readFileSync(path.join(root, 'js', 'combate-config.js'), 'utf8'), 6, { mp: 3 }).then(r => {
+  r.charStats.forEach(c => console.log(`  ${c.who.padEnd(12)} ${(c.rate * 100).toFixed(1).padStart(5)}%  ${c.ok ? 'OK' : 'FORA'}`));
+  console.log('  Confrontos mais desiguais: ' + r.pairStats.slice(0, 5).map(p => `${p.dominant} x ${p.victim} ${p.score}`).join(', '));
+  const fora = r.charStats.filter(c => c.rate < 0.38 || c.rate > 0.62).map(c => c.who + ' ' + (c.rate * 100).toFixed(1) + '%');
+  assert.equal(fora.length, 0, 'Lutadores fora de 38%–62% no rodízio: ' + fora.join(', '));
+  console.log('ASSERT: os 20 lutadores entre 38% e 62% de vitória no rodízio.');
+}).catch(e => { console.error(e); process.exitCode = 1; });
 
 console.log('\n================================================================');
 console.log('2. TESTE DA CAMPANHA: 10 Fases x 4 Equipes (Todos os 16 Personagens)');

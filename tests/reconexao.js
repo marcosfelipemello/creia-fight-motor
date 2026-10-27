@@ -50,17 +50,17 @@ try {
   assert.equal(resumedGuest.last('resumed').started,true);
   assert(resumedHost.last('back'),'dono não soube que convidado voltou');
   resumedGuest.drop();
-  now+=60000;
+  now+=195000;
   relay.expireRooms(now);
-  assert.equal(relay.rooms.has(created.code),false,'sala de luta não expirou em 60 s');
+  assert.equal(relay.rooms.has(created.code),false,'sala de luta não expirou após a margem de retomada');
   assert(resumedHost.last('left'),'dono não foi avisado do prazo esgotado');
 
   const alone=client();alone.send({type:'create'});
   const code=alone.last('created').code;alone.drop();
-  now+=179999;relay.expireRooms(now);
+  now+=180000;relay.expireRooms(now);
   assert.equal(relay.rooms.has(code),true);
-  now++;relay.expireRooms(now);
-  assert.equal(relay.rooms.has(code),false,'sala vazia não expirou em 3 min');
+  now+=15000;relay.expireRooms(now);
+  assert.equal(relay.rooms.has(code),false,'sala vazia não expirou após 3 min mais margem');
   console.log('Token, retomada após 20 s e 10 s, avisos e prazos: OK');
 } finally {
   Date.now=originalNow;

@@ -44,6 +44,8 @@
     if(opts.flash){ctx.shadowColor='#fff';ctx.shadowBlur=3;}
     if(state==='walk')walk(ctx,img,m,k,t);
     else ctx.drawImage(img,-m.feet[0]*k,-m.feet[1]*k,img.naturalWidth*k,img.naturalHeight*k);
+    var fo=rig.falando;   // falando no culto: boca por cima da arte (px da imagem base)
+    if(fo&&fo.who==='bispo'&&name==='base'&&state!=='walk'&&rig.falaFace){ctx.translate(-m.feet[0]*k,-m.feet[1]*k);ctx.scale(k,k);rig.falaFace(ctx,{x:612,y:404,w:40,h:30},fo.boca,fo.vogal);}
     ctx.restore();return true;
   }
   rig.ready=function (who) {return who==='bispo' && loaded()?true:original.ready.apply(rig,arguments);};

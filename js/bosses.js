@@ -634,24 +634,32 @@
     if (b.kind === 'miniCoxinha') return ['peck'];
     if (b.kind === 'miniKibe') return ['roll'];
     if (b.kind === 'miniRisole') return ['miniShot'];
-    if (b.kind === 'cane') return ['flood', 'splash'];
+    if (b.kind === 'cane') return b.forma === 2 ? ['flood', 'splash', 'garapa'] : ['flood', 'splash'];
     if (b.kind === 'pastel9') return ['oil', 'dash'];
-    if (b.stage === 1) return ['stomp', 'bacon'];
-    if (b.stage === 2) return ['palha', 'eggs', 'mayo'];
-    if (b.stage === 3) return ['fly', 'oil', 'summon'];
-    if (b.stage === 4) return ['triple', 'rain'];
-    if (b.stage === 5) return ['dash', 'cheese'];
-    if (b.stage === 6) return ['skewers', 'smoke'];
-    if (b.stage === 7) return ['boulder'];
+    if (b.stage === 1) return b.forma === 2 ? ['stomp', 'bacon', 'baconDuplo'] : ['stomp', 'bacon'];
+    if (b.stage === 2) return b.forma === 2 ? ['palha', 'eggs', 'mayo', 'ovosChuva'] : ['palha', 'eggs', 'mayo'];
+    if (b.stage === 3) return b.forma === 2 ? ['fly', 'oil', 'summon', 'oleoVelho'] : ['fly', 'oil', 'summon'];
+    if (b.stage === 4) return b.forma === 2 ? ['triple', 'rain', 'supersize'] : ['triple', 'rain'];
+    if (b.stage === 5) return b.forma === 2 ? ['dash', 'cheese', 'bordaRecheada'] : ['dash', 'cheese'];
+    if (b.stage === 6) return b.forma === 2 ? ['skewers', 'smoke', 'espetoes'] : ['skewers', 'smoke'];
+    if (b.stage === 7) return b.forma === 2 ? ['boulder', 'acaiTudo'] : ['boulder'];
     if (b.stage === 8) return ['stomp', 'summon'];
     if (b.stage === 10) {
-      if (b.phase === 1) return ['stomp', 'bacon', 'palha'];
-      if (b.phase === 2) return ['dash', 'rain', 'oil', 'triple'];
-      return ['flood', 'skewers', 'boulder', 'cheese', 'triple'];
+      var list;
+      if (b.phase === 1) list = ['stomp', 'bacon', 'palha'];
+      else if (b.phase === 2) list = ['dash', 'rain', 'oil', 'triple'];
+      else list = ['flood', 'skewers', 'boulder', 'cheese', 'triple'];
+      if (b.forma === 2) list.push('batatas');
+      return list;
     }
     return ['stomp'];
   }
   function duration(type) {
+    if (type === 'batatas') return 1.6;
+    if (type === 'supersize') return 1.9;
+    if (type === 'ovosChuva') return 1.25;
+    if (type === 'baconDuplo' || type === 'oleoVelho' || type === 'bordaRecheada' ||
+        type === 'espetoes' || type === 'acaiTudo' || type === 'garapa') return 0.55;
     if (type === 'fly' || type === 'dash' || type === 'mayo' || type === 'flood') return 0.95;
     if (type === 'triple' || type === 'rain' || type === 'eggs' || type === 'smoke') return 1.25;
     return 0.42;
@@ -681,7 +689,7 @@
     }
     b.originX = b.x;
     b.dashDir = b.facing;
-    b.warnTime = b.stage === 10 && b.phase === 3 ? 0.58 : 0.72;
+    b.warnTime = (b.stage === 10 && b.phase === 3 ? 0.58 : 0.72) / (b.speed || 1);
     if (b.attack === 'fly' || b.attack === 'dash') {
       var a = arena(G);
       b.dashDir = b.x < (a.left + a.right) / 2 ? 1 : -1;
@@ -708,8 +716,24 @@
         }, d * 0.75, 22);
         G.shake(2, 0.16);
       }
+    } else if (type === 'supersize') {
+      var pulse = Math.min(6, Math.floor(b.timer / 0.3));
+      while (b.did < pulse && b.did < 6) {
+        b.did++;
+        var waveIdx = (b.did - 1) % 3 + 1;
+        hitPlayers(G, b, function (p) {
+          var r = Math.hypot(p.x - b.x, (p.y - b.y) * 2);
+          return r >= 18 + waveIdx * 25 && r <= 55 + waveIdx * 31;
+        }, d * 0.5, 20);
+        G.shake(2, 0.16);
+      }
     } else if (type === 'bacon' && !b.did++) {
       for (var i = -2; i <= 2; i++) shoot(G, b, 'bacon', b.facing * 115, i * 24, 3, 0, d * 0.6);
+    } else if (type === 'baconDuplo' && !b.did++) {
+      for (var i = -2; i <= 2; i++) {
+        shoot(G, b, 'bacon', b.facing * 115, i * 24, 3, 0, d * 0.5);
+        shoot(G, b, 'bacon', -b.facing * 115, i * 24, 3, 0, d * 0.5);
+      }
     } else if (type === 'palha' && !b.did++) {
       for (var j = -1; j <= 1; j++) aim(G, b, 105 + j * 10, 'palha', d * 0.8,
         { vz: 85, grav: 190, onLand: 'explode', oy: j * 9 });
@@ -720,6 +744,14 @@
         // Each short arc starts where the previous hop would land.
         shoot(G, b, 'egg', b.facing * (77 - egg * 7), (egg - 2.5) * 8,
           94 - egg * 13, 240, d * 0.55, null, b.facing * (egg - 1) * 42);
+      }
+    } else if (type === 'ovosChuva') {
+      var drop = b.timer >= 1.25 ? 10 : Math.min(10, Math.floor(b.timer / (1.25 / 10)));
+      while (b.did < drop && b.did < 10) {
+        b.did++;
+        var sx = rand(a.left, a.right);
+        shoot(G, b, 'egg', rand(-40, 40), rand(-20, 20), 90, 220,
+          d * 0.45, null, sx - b.x, rand(-12, 12));
       }
     } else if (type === 'mayo' || type === 'flood') {
       var width = type === 'flood' ? (a.right - a.left) / 2 : 240;
@@ -736,7 +768,7 @@
       }, type === 'flood' ? d * 0.9 : d * 0.7, 18);
       if (!b.did++) G.sound('splash');
     } else if (type === 'fly' || type === 'dash' || type === 'roll') {
-      var speed = type === 'fly' ? 285 : type === 'roll' ? 170 : b.stage === 10 ? 300 : 240;
+      var speed = (type === 'fly' ? 285 : type === 'roll' ? 170 : b.stage === 10 ? 300 : 240) * (b.speed || 1);
       b.x += b.dashDir * speed * dt;
       if (type === 'fly') {
         b.z = 47 + Math.round(Math.sin(b.timer * 9) * 8);
@@ -761,6 +793,16 @@
           d * 0.5, 'poca');
         G.puddle(clamp(b.tx + k * 28, a.left, a.right), clamp(b.ty, a.top, a.bottom), 26, 3);
       }
+    } else if (type === 'oleoVelho' && !b.did++) {
+      var spanX = a.right - a.left;
+      for (var ko = 0; ko < 3; ko++) {
+        var ox = a.left + spanX * (0.2 + ko * 0.3) + rand(-15, 15);
+        var oy = a.top + ((a.bottom - a.top) / 3) * (ko + 0.5) + rand(-8, 8);
+        ox = clamp(ox, a.left + 20, a.right - 20);
+        oy = clamp(oy, a.top, a.bottom);
+        shoot(G, b, 'oil', rand(-20, 20), rand(-10, 10), 80, 190, d * 0.42, 'poca', ox - b.x, oy - b.y);
+        G.puddle(ox, oy, 26, 3);
+      }
     } else if (type === 'summon' && !b.did++) {
       for (var m = -1; m <= 1; m++) G.spawn('coxinha', clamp(b.x + m * 45, a.left + 15, a.right - 15), b.y);
     } else if (type === 'rain') {
@@ -770,6 +812,14 @@
         shoot(G, b, 'fry', rand(-45, 45), rand(-22, 22), 95, 175,
           d * 0.55, null, rand(-70, 70), rand(-12, 12));
       }
+    } else if (type === 'batatas') {
+      var drop = b.timer >= 1.6 ? 14 : Math.min(14, Math.floor(b.timer / (1.6 / 14)));
+      while (b.did < drop && b.did < 14) {
+        b.did++;
+        var sx = rand(a.left, a.right);
+        shoot(G, b, 'fry', rand(-45, 45), rand(-22, 22), 95, 175,
+          d * 0.45, null, sx - b.x, rand(-12, 12));
+      }
     } else if (type === 'cheese' && !b.did++) {
       var dx = b.tx - b.x, dy = b.ty - b.y, len = Math.max(1, Math.hypot(dx, dy));
       hitPlayers(G, b, function (p) {
@@ -778,12 +828,42 @@
         return t * len <= 205 && Math.hypot(p.x - ex, (p.y - ey) * 1.5) < 16;
       }, d, 27);
       G.sound('whoosh');
+    } else if (type === 'bordaRecheada' && !b.did++) {
+      var baseAng = Math.atan2(b.ty - b.y, b.tx - b.x);
+      var fanAngles = [baseAng, baseAng + 25 * Math.PI / 180, baseAng - 25 * Math.PI / 180];
+      hitPlayers(G, b, function (p) {
+        for (var ai = 0; ai < fanAngles.length; ai++) {
+          var ang = fanAngles[ai], cdx = Math.cos(ang), cdy = Math.sin(ang);
+          var dist = (p.x - b.x) * cdx + (p.y - b.y) * cdy;
+          if (dist >= 0 && dist <= 205) {
+            var lx = b.x + cdx * dist, ly = b.y + cdy * dist;
+            if (Math.hypot(p.x - lx, (p.y - ly) * 1.5) < 16) return true;
+          }
+        }
+        return false;
+      }, d * 0.5, 25);
+      G.sound('whoosh');
     } else if (type === 'skewers' && !b.did++) {
       hitPlayers(G, b, function (p) {
         var dx = (p.x - b.x) * b.facing, dy = p.y - b.y;
         return dx > 8 && dx < 110 && Math.abs(dy) < 60;
       }, d, 28);
       G.shake(2, 0.16); G.particles('estrela', b.x + b.facing * 70, b.y, 9);
+      G.sound('whoosh');
+    } else if (type === 'espetoes' && !b.did++) {
+      var fanAngles = [0, 25 * Math.PI / 180, -25 * Math.PI / 180];
+      hitPlayers(G, b, function (p) {
+        var fdx = (p.x - b.x) * b.facing, fdy = p.y - b.y;
+        for (var fi = 0; fi < fanAngles.length; fi++) {
+          var fa = fanAngles[fi];
+          var cfa = Math.cos(fa), sfa = Math.sin(fa);
+          var forward = fdx * cfa + fdy * sfa;
+          var perp = Math.abs(-fdx * sfa + fdy * cfa);
+          if (forward > 8 && forward < 125 && perp < 32) return true;
+        }
+        return false;
+      }, d * 0.5, 28);
+      G.shake(3, 0.2); G.particles('estrela', b.x + b.facing * 70, b.y, 14);
       G.sound('whoosh');
     } else if (type === 'smoke') {
       var tick = Math.floor(b.timer / 0.24);
@@ -798,9 +878,29 @@
         shoot(G, b, 'boulder', ddx / 1.4, ddy / 1.4,
           115, 220, d * 0.8, null);
       }
+    } else if (type === 'acaiTudo' && !b.did++) {
+      var yBands = [a.top + 15, (a.top + a.bottom) / 2, a.bottom - 15];
+      var tx = b.tx || (b.x + b.facing * 180);
+      for (var bi = 0; bi < 3; bi++) {
+        var ddx = tx - b.x, ddy = yBands[bi] - b.y;
+        shoot(G, b, 'boulder', ddx / 1.4, ddy / 1.4, 115, 220, d * 0.5, null);
+      }
     } else if (type === 'splash' && !b.did++) {
       for (var v = -2; v <= 2; v++) shoot(G, b, 'gordura', b.facing * 100,
         v * 19, 20, 60, d * 0.65, null);
+    } else if (type === 'garapa' && !b.did++) {
+      var spanG = a.right - a.left;
+      var points = [
+        [a.left + spanG * 0.25, a.top + 18],
+        [a.left + spanG * 0.5, (a.top + a.bottom) / 2],
+        [a.left + spanG * 0.75, a.bottom - 18]
+      ];
+      for (var pi = 0; pi < points.length; pi++) {
+        var pt = points[pi];
+        for (var v = -2; v <= 2; v++) {
+          shoot(G, b, 'gordura', b.facing * 100, v * 19, 20, 60, d * 0.45, null, pt[0] - b.x, pt[1] - b.y);
+        }
+      }
     } else if (type === 'peck' && !b.did++) {
       G.hit(b.x + b.facing * 20, b.y, 23, 14, 0, 60, d, 12, b.x);
     } else if (type === 'miniShot' && !b.did++) {
@@ -809,17 +909,23 @@
   }
   function make(stage, kind, G, options) {
     var o = options || {}, sz = o.size || SIZES[stage - 1], a = arena(G);
+    var cfg = typeof window !== 'undefined' && window.CreiaCombat && window.CreiaCombat.chefes;
+    var ajuste = cfg && cfg[stage] || {}, vida = ajuste.vida == null ? 1 : ajuste.vida, dano = ajuste.dano == null ? 1 : ajuste.dano;
+    var hp = Math.round((o.hp || HP[stage - 1]) * vida);
     var b = {
       name: o.name || NAMES[stage - 1], stage: stage, kind: kind,
       x: o.x == null ? (a.left + a.right) / 2 : o.x,
       y: o.y == null ? (a.top + a.bottom) / 2 : o.y,
       z: 0, w: sz[0], h: sz[1],
-      hp: o.hp || HP[stage - 1], maxHp: o.hp || HP[stage - 1],
+      hp: hp, maxHp: hp,
       armor: 0, facing: -1, dead: false, flash: 0,
       state: 'rest', timer: 0, restTime: 1.45, attackIndex: 0,
       attack: '', did: 0, tx: 0, ty: 0, phase: 1,
       lookX: -1, lookY: 0,
-      damage: o.damage || Math.round(8 + (stage - 1) * 10 / 9),
+      damage: Math.round((o.damage || Math.round(8 + (stage - 1) * 10 / 9)) * dano * 100) / 100,
+      forma: o.forma || 1,
+      transT: 0,
+      speed: o.speed || 1,
       update: function (dt, game) {
         if (this.dead || !Number.isFinite(dt) || dt <= 0) return;
         var gg = game || G;
@@ -846,16 +952,40 @@
           if (this.timer >= 1.3) this.dead = true;
           return;
         }
-        if (this.stage === 8 && this.kind === 'tower' && this.hp <= this.maxHp * 0.5) {
-          this.dead = true;
-          gg.shake(5, 0.4); gg.particles('estrela', this.x, this.y - 70, 24);
-          var kinds = ['miniCoxinha', 'miniKibe', 'miniRisole'];
-          var names = ['Coxinha Furiosa', 'Kibe Brutal', 'Risole Voador'];
-          for (var i = 0; i < 3; i++) {
-            gg.addBoss(make(8, kinds[i], gg, { name: names[i], size: [47, 52],
-              x: this.x + (i - 1) * 47, y: this.y + (i - 1) * 8,
-              hp: 270, damage: 13 }));
+        var sfCfg = (typeof window !== 'undefined' && window.CreiaCombat && window.CreiaCombat.segundaForma) || { limite: 0.5, velocidade: 1.25, dano: 1.15, cena: 1.5 };
+        if (this.hp > 0 && this.forma !== 2 && this.hp <= this.maxHp * sfCfg.limite) {
+          this.forma = 2;
+          this.transT = sfCfg.cena;
+          if (typeof window !== 'undefined' && window.SegundaForma && typeof window.SegundaForma.inicio === 'function') {
+            try { window.SegundaForma.inicio(this); } catch (e) {}
           }
+        }
+        if (this.transT > 0) {
+          this.transT = Math.max(0, this.transT - dt);
+          this.flash = Math.max(0, (this.flash || 0) - dt);
+          if (this.transT <= 0) {
+            this.transT = 0;
+            if (typeof window !== 'undefined' && window.SegundaForma && typeof window.SegundaForma.fim === 'function') {
+              try { window.SegundaForma.fim(this); } catch (e) {}
+            }
+            this.speed = (this.speed || 1) * sfCfg.velocidade;
+            this.damage = Math.round(this.damage * sfCfg.dano * 100) / 100;
+            this.state = 'rest';
+            this.timer = 0;
+            if (this.stage === 8 && this.kind === 'tower') {
+              this.dead = true;
+              gg.shake(5, 0.4); gg.particles('estrela', this.x, this.y - 70, 24);
+              var kinds = ['miniCoxinha', 'miniKibe', 'miniRisole'];
+              var names = ['Coxinha Furiosa', 'Kibe Brutal', 'Risole Voador'];
+              for (var i = 0; i < 3; i++) {
+                gg.addBoss(make(8, kinds[i], gg, { name: names[i], size: [47, 52],
+                  x: this.x + (i - 1) * 47, y: this.y + (i - 1) * 8,
+                  hp: 270, damage: Math.round(13 * sfCfg.dano), forma: 2 }));
+              }
+              return;
+            }
+          }
+          keep(this, gg);
           return;
         }
         if (this.stage === 10) {
@@ -879,7 +1009,7 @@
           action(this, gg, dt);
           if (this.timer >= duration(this.attack)) {
             this.state = 'rest'; this.timer = 0;
-            this.restTime = this.stage === 10 ? 1.08 : 1.2 + (this.attackIndex % 3) * 0.22;
+            this.restTime = (this.stage === 10 ? 1.08 : 1.2 + (this.attackIndex % 3) * 0.22) / (this.speed || 1);
             this.z = 0;
           }
         }
@@ -901,7 +1031,7 @@
             for (var fy = this.warnTop; fy <= this.warnBottom; fy += 10) {
               box(ctx, floorX, sy + this.z + fy - this.y, floorW, 2, warnColor);
             }
-          } else if (this.attack === 'stomp' || this.attack === 'triple') {
+          } else if (this.attack === 'stomp' || this.attack === 'triple' || this.attack === 'supersize') {
             for (var ring = 1; ring <= 3; ring++) {
               for (var dot = 0; dot < 16; dot++) {
                 var angle = dot * Math.PI / 8;
@@ -911,6 +1041,13 @@
             }
           } else if (this.attack === 'cheese' || this.attack === 'skewers') {
             pxLine(ctx, sx, sy - this.z - 22, wx, wy - 12, warnColor, 3);
+          } else if (this.attack === 'bordaRecheada' || this.attack === 'espetoes') {   // 2ª forma: o leque de 3 linhas aparece no aviso
+            var fanBase = this.attack === 'espetoes' ? (this.facing < 0 ? Math.PI : 0) : Math.atan2(this.ty - this.y, this.tx - this.x);
+            var fanLen = this.attack === 'espetoes' ? 125 : 205;
+            for (var fl = -1; fl <= 1; fl++) {
+              var fanA = fanBase + fl * 25 * Math.PI / 180;
+              pxLine(ctx, sx, sy - this.z - 22, sx + Math.cos(fanA) * fanLen, sy - this.z - 22 + Math.sin(fanA) * fanLen, warnColor, 3);
+            }
           } else {
             for (var k = 0; k < 12; k++) {
               var ang = k * Math.PI / 6;

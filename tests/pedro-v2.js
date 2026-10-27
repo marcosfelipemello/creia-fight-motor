@@ -7,6 +7,8 @@ harness=harness.replace('return {api:env.__bangu,textSeen,','return {env,events,
 const scripts=Array.from(read(path.join(root,'index.html'),'utf8').matchAll(/<script src="js\/([^\"]+)\.js"><\/script>/g),m=>m[1]);
 fs.readFileSync=function(file,...args){
  const p=path.resolve(String(file)),data=read(file,...args);
+ // Teste de mecânica: neutraliza multiplicador de equilíbrio de dano do X1
+ if(p===path.join(root,'js/combate-config.js'))return data.replace('api.resistenciaX1={','api.resistenciaX1Off={');
  if(p===path.join(root,'js/rig.js'))return data+'\n'+scripts.slice(scripts.indexOf('marcos-assets'),scripts.indexOf('combate-config')).map(n=>read(path.join(root,'js',n+'.js'),'utf8')).join('\n');
  if(p===path.join(root,'js/game.js'))return data.replace('  window.__bangu = {','  window.__pedroTest={get cine(){return cine;},drawCine:function(t){cine={p:players[0],t:t};drawCine();},duration:cineDuration,predict:predictGuest,online:function(value){online=value;}};\n  window.__bangu = {');
  return data;
@@ -36,12 +38,12 @@ try{
   const p=g.api.state.players[0];p.x=g.api.state.cam+(facing>0?100:340);p.y=220;p.facing=facing;p.inv=0;
   g.api.state.enemies.length=0;const target=vs?g.api.state.players[1]:g.api.cardosoTest.spawn('fome',p.x+95*facing,p.y);
   target.x=p.x+95*facing;target.y=p.y;target.hp=500;target.inv=0;target.shield=0;target.stun=999;target.facing=-facing;
-  if(blocked){g.events.keydown({code:'Quote',preventDefault(){}});g.tick();}
+  if(blocked){g.events.keydown({code:'Quote',preventDefault(){}});for(let i=0;i<10;i++)g.tick();}
   const hp=target.hp,x=p.x;g.key('KeyI');assert.equal(p.state,'attack2');assert.equal(p.z,0);assert.equal(p.vz,0);assert(p.altCd>1);
   const shot=g.api.state.shots.find(s=>s.k==='pedro-12');assert(shot);assert.equal(shot.dmg,12);assert.equal(shot.pierce,1);
   for(let i=0;i<24;i++){g.tick();assert.equal(p.z,0,'Pedro saltou no tiro');assert.equal(p.vz,0);}
   assert.equal(p.state,'idle');assert(Math.abs(p.x-x)<1,'Pedro avançou como numa voadora');
-  assert(Math.abs(target.hp-(blocked?hp:hp-(vs?4.8:12)))<.001,'dano repetido ou defesa ignorada '+JSON.stringify({vs,facing,blocked,hp,after:target.hp,z:shot.z,px:p.x,tx:target.x,ty:target.y,py:p.y}));
+  assert(Math.abs(target.hp-(blocked?hp:hp-(vs?2.88:12)))<.001,'dano repetido ou defesa ignorada '+JSON.stringify({vs,facing,blocked,hp,after:target.hp,z:shot.z,px:p.x,tx:target.x,ty:target.y,py:p.y}));
   if(blocked)assert(target.guardHp<100);g.key('KeyI');assert(!g.api.state.shots.some(s=>s.k==='pedro-12'),'recarga permitiu novo disparo cedo');
  }
  {

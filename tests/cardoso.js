@@ -99,6 +99,6 @@ for(let i=0;i<50&&run.api.state.scene==='play';i++) {
   const state=run.api.sim(60,true);
   if(state.stage>lastStage) lastStage=state.stage;
 }
-assert.equal(run.api.state.scene,'ending','campanha não chegou ao final: '+JSON.stringify(run.api.state));
+assert.equal(run.api.state.scene,'ending','campanha não chegou ao final: '+JSON.stringify({scene:run.api.state.scene,stage:run.api.state.stage,phase:run.api.state.phase}));
 assert.equal(lastStage,10);
 console.log('Campanha de 10 fases com Cardoso até ending: OK');

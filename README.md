@@ -13,12 +13,17 @@ A galera da igreja Creia, de Bangu (Rio de Janeiro), sai na porrada contra a **F
 | Modo | Como funciona |
 |---|---|
 | **Aventura** | De 1 a 4 jogadores no mesmo aparelho. Com um jogador só, os outros lutadores do time são controlados pela IA, que segue quem está jogando. A dificuldade cresce com o tamanho do time. São 10 fases com rolagem lateral e um chefão no fim de cada uma. |
-| **X1 local** | Um contra um, em melhor de 3 rounds, contra um amigo ou contra a IA (fácil, médio ou difícil). |
-| **X1 online** | Uma pessoa cria a sala e a outra entra com o código de 5 letras. Se a conexão cair, dá para voltar à mesma partida. Tem ranking. |
+| **Aventura online (BETA)** | Dois jogadores, cada um no seu aparelho, jogam a aventura juntos, com até 2 aliados da IA. |
+| **X1 local** | Um contra um, em melhor de 3 rounds: P1 × IA, P1 × P2 ou IA × IA (fácil, médio ou difícil). |
+| **X1 online** | Uma pessoa cria a sala e a outra entra com o código de 5 letras ou pelo link. Se a conexão cair ou o app for para segundo plano, dá para voltar à mesma sala. Tem ranking. |
+| **Torneio** | Chave sorteada de 4, 8, 12 ou 16 lutadores, melhor de 3 em cada luta. |
+| **Escalada** | Um lutador contra os outros 19, um por vez, com a IA cada vez mais forte. Perdeu, acabou. |
+
+A aventura sempre começa na fase 1 e não tem "continuar": morreu ou zerou, a pontuação vai para o ranking e a próxima partida recomeça do início.
 
 ### O gato de rua
 
-Em cada fase existe um **gato de rua**, que funciona como checkpoint. Fazer carinho nele (tecla **E** perto do gato) levanta quem caiu e recupera um pouco da vida do time.
+Em cada fase existe um **gato de rua**. Fazer carinho nele (tecla **E** perto do gato) levanta quem caiu e recupera um pouco da vida do time.
 
 ### Instalação no celular
 
@@ -179,6 +184,7 @@ Ela decide entre aproximar, recuar, atacar, defender ou soltar o especial. Os n�
 - **Servidor:** `server/index.js` é um servidor WebSocket escrito à mão (RFC 6455, só com a biblioteca padrão do Node). Ele só **repassa mensagens** entre os dois jogadores da sala e guarda o ranking.
 - **Simulação:** quem cria a sala **simula a partida**. Quem entra manda só os comandos e recebe instantâneos (snapshots) do estado. Para não sentir atraso, o visitante prevê o próprio movimento até o próximo instantâneo chegar. Quando a rede permite, os dois aparelhos se ligam direto por WebRTC, e o servidor fica só como ponte e reserva.
 - **Reconexão:** um token secreto por jogador permite voltar à mesma sala se a conexão cair.
+- **Aventura online:** mesmo modelo. O anfitrião simula a fase e manda instantâneos compactos a 20 Hz; o convidado interpola inimigos e chefes.
 
 ### Abertura
 

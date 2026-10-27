@@ -10,6 +10,8 @@ harness=harness.replace('this.naturalWidth=100;','this.naturalWidth=100;this.nat
 const extras=Array.from(read(path.join(root,'index.html'),'utf8').matchAll(/<script src="js\/([^\"]+)\.js"><\/script>/g),m=>m[1]);
 const from=extras.indexOf('marcos-assets'),to=extras.indexOf('online');
 fs.readFileSync=function(file,...args){const abs=path.resolve(String(file));
+ // Teste de mecânica: neutraliza multiplicador de equilíbrio de dano do X1
+ if(abs===path.join(root,'js/combate-config.js'))return read(file,...args).replace('api.resistenciaX1={','api.resistenciaX1Off={');
  if(abs===path.join(root,'js/rig.js'))return read(file,...args)+'\n'+extras.slice(from,to).filter(n=>n!=='interface').map(n=>read(path.join(root,'js',n+'.js'),'utf8')).join('\n');
  if(abs===path.join(root,'js/game.js'))return read(file,...args).replace('  window.__bangu = {',`  window.__ricTest={predict:predictGuest,ui:modernUIState,bridge:uiBridge,damage:damagePlayer,snapshot:onlineSnapshot,online:function(o){online=o;},get cine(){return cine;},draw:function(t){cine={p:players[0],t:t};drawCine();},guest:drawOnlineGuest};\n  window.__bangu = {`);
  return read(file,...args);
@@ -48,12 +50,12 @@ try{
  // IA × IA e dificuldades sobrevivem à troca de round.
  {
   const g=client(),test=g.env.__ricTest;test.bridge.menu(0);test.bridge.mode('eve');test.bridge.level(0,'facil');test.bridge.level(1,'dificil');test.bridge.x1(0);
-  test.bridge.pick(0);g.tick();test.bridge.pick(18);g.tick();test.bridge.pick(20);g.tick();g.until(()=>g.api.state.scene==='play',250);
-  assert(g.api.state.players.every(p=>p.ai));assert.deepEqual(Array.from(g.api.state.players,p=>p.aiLevel),['facil','dificil']);g.until(()=>g.api.state.round.phase==='fight',150);g.tick();
+  test.bridge.pick(0);g.tick();test.bridge.pick(18);g.tick();test.bridge.pick(20);g.tick();g.key('Enter');g.until(()=>g.api.state.scene==='play',250);
+  assert(g.api.state.players.every(p=>p.ai));assert.deepEqual(Array.from(g.api.state.players,p=>p.aiLevel),['facil','dificil']);g.until(()=>g.api.state.round.phase==='fight',300);g.tick();
   const levels=g.api.state.players;assert(levels[0].aiWait>levels[1].aiWait,'dificuldade sem diferença de reação');levels[1].hp=0;levels[1].dead=true;g.tick();g.until(()=>g.api.state.round.number===2,300);assert.deepEqual(Array.from(g.api.state.players,p=>p.aiLevel),['facil','dificil']);
  }
  {
-  const g=client(),test=g.env.__ricTest;test.bridge.menu(1);test.bridge.pick(0);g.tick();const state=test.ui();assert.equal(state.roster.length,20);assert.equal(new Set(state.roster.map(r=>r.who)).size,20);assert.equal(state.roster.at(-1).who,'adriene');
+  const g=client(),test=g.env.__ricTest;test.bridge.menu(1);test.bridge.adventureGo(0);test.bridge.pick(0);g.tick();const state=test.ui();assert.equal(state.roster.length,20);assert.equal(new Set(state.roster.map(r=>r.who)).size,20);assert.equal(state.roster.at(-1).who,'adriene');
   g.api.startTeam([{who:'duda',ctl:0}],false,false);const p=g.api.state.players[0];p.altCd=0;g.key('KeyI');const ui=test.ui();assert(ui.players[0].secondary>29);assert(ui.players[0].secondary<=30);
  }
  console.log('Ricardo: soco, rolagem, projétil real, K.O., especial defendido/livre, impacto único, recargas e IA × IA com níveis: OK');

@@ -89,7 +89,7 @@ function startLocal() {
   const c=client();
   c.key('Enter'); c.key('Enter'); // menu X1 > X1 local
   assert.equal(c.state.scene,'select');
-  c.key('KeyJ'); c.key('KeyJ'); c.key('Enter'); // P1, CPU e INICIAR
+  c.key('KeyJ'); c.key('KeyJ'); c.key('Enter'); c.key('Enter'); // P1, CPU, INICIAR e cenário
   c.until(s => s.scene==='play');
   assert.equal(c.state.players[1].ai,true);
   return c;
@@ -150,7 +150,7 @@ console.log('Empate repete round: OK');
 
 const keyboard=client();
 keyboard.key('Enter'); keyboard.key('KeyD'); keyboard.key('Enter');
-keyboard.key('KeyJ'); keyboard.key('Comma'); keyboard.key('Comma'); keyboard.key('KeyL');
+keyboard.key('KeyJ'); keyboard.key('Comma'); keyboard.key('Comma'); keyboard.key('KeyL'); keyboard.key('Enter');   // L inicia, Enter confirma o cenário
 keyboard.until(s => s.scene==='play');
 assert.equal(keyboard.state.players[0].ai,false);
 assert.equal(keyboard.state.players[1].ai,false);
@@ -160,7 +160,7 @@ assert.equal(keyboard.state.players[1].ctl,1);
 console.log('Dois jogadores no teclado: OK');
 
 const host=client(),guest=client();
-host.key('Enter'); host.key('KeyS'); host.key('Enter');
+host.key('Enter'); host.key('KeyD');host.key('KeyD');host.key('KeyD'); host.key('Enter');
 guest.transport.join(host.transport.code);
 host.key('Enter'); guest.key('KeyD'); guest.key('Enter'); host.tick();
 assert.equal(host.state.scene,'play'); assert.equal(guest.state.scene,'onlinePlay');
@@ -211,7 +211,7 @@ host.transport.leave();assert.equal(host.state.scene,'menu');assert.equal(guest.
 console.log('Online: revanche, troca de lutadores na mesma sala, consentimento, reconexão e mensagens antigas rejeitadas: OK');
 
 const pauseHost=client(),pauseGuest=client();
-pauseHost.key('Enter');pauseHost.key('KeyS');pauseHost.key('Enter');
+pauseHost.key('Enter');pauseHost.key('KeyD');pauseHost.key('KeyD');pauseHost.key('KeyD');pauseHost.key('Enter');
 pauseGuest.transport.join(pauseHost.transport.code);
 pauseHost.key('Enter');pauseGuest.key('KeyD');pauseGuest.key('Enter');pauseHost.tick();
 pauseHost.until(s=>s.round&&s.round.phase==='fight');
@@ -228,7 +228,7 @@ console.log('Online, pausa e retomada no mesmo estado: OK');
 pauseHost.transport.leave();
 
 const hostExit=client(),guestExit=client();
-hostExit.key('Enter'); hostExit.key('KeyS'); hostExit.key('Enter');
+hostExit.key('Enter'); hostExit.key('KeyD');hostExit.key('KeyD');hostExit.key('KeyD'); hostExit.key('Enter');
 guestExit.transport.join(hostExit.transport.code);
 hostExit.key('Enter'); guestExit.key('KeyD'); guestExit.key('Enter'); hostExit.tick();
 hostExit.key('KeyP');
@@ -240,7 +240,7 @@ console.log('Online, saída no meio da luta: OK');
 
 // 15 toques por segundo durante 10 segundos passam pelo parser e limitador WebSocket reais.
 const fastHost=client(),fastGuest=client();
-fastHost.key('Enter'); fastHost.key('KeyS'); fastHost.key('Enter');
+fastHost.key('Enter'); fastHost.key('KeyD');fastHost.key('KeyD');fastHost.key('KeyD'); fastHost.key('Enter');
 fastGuest.transport.join(fastHost.transport.code);
 fastHost.key('Enter'); fastGuest.key('KeyD'); fastGuest.key('Enter'); fastHost.tick();
 const firstInput=fastGuest.transport.sent.filter(m=>m.type==='input').length;
@@ -261,7 +261,7 @@ fastGuest.transport.send({type:'input',input:{x:0,y:0}});
 assert.equal(fastGuest.transport.peer.closed,true,'servidor aceitou mais de 60 mensagens/s');
 
 const hitHost=client(),hitGuest=client();
-hitHost.key('Enter'); hitHost.key('KeyS'); hitHost.key('Enter');
+hitHost.key('Enter'); hitHost.key('KeyD');hitHost.key('KeyD');hitHost.key('KeyD'); hitHost.key('Enter');
 hitGuest.transport.join(hitHost.transport.code);
 hitHost.key('Enter'); hitGuest.key('KeyD'); hitGuest.key('Enter'); hitHost.tick();
 hitHost.until(s=>s.round&&s.round.phase==='fight');
@@ -277,7 +277,7 @@ console.log('Golpe e K.O. transmitidos para o convidado: OK');
 
 // Os especiais exercitam as mesmas camadas de desenho nos dois clientes e medem o pacote completo.
 const fxHost=client(),fxGuest=client();
-fxHost.key('Enter'); fxHost.key('KeyS'); fxHost.key('Enter');
+fxHost.key('Enter'); fxHost.key('KeyD');fxHost.key('KeyD');fxHost.key('KeyD'); fxHost.key('Enter');
 fxGuest.transport.join(fxHost.transport.code);
 fxHost.key('Enter'); fxGuest.key('KeyD'); fxGuest.key('Enter'); fxHost.tick();
 fxHost.until(s=>s.round&&s.round.phase==='fight');

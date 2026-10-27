@@ -3,25 +3,36 @@
   'use strict';
   var socket = null, onMessage = null, overlay = null, overlayStatus = null;
   var manualClose = false, reconnectTimer = null, retry = 0, credentials = null;
-  var STORE = 'bangu-online-room';
+  var STORE = 'bangu-online-room', suspended = false;
+  var RECOVERY_AGE = 195000; // Três minutos mais margem para a conexão de volta.
   var local = location.hostname === '127.0.0.1' || location.hostname === 'localhost';
   var api = local ? 'http://127.0.0.1:8790' : '';
   var endpoint = local ? 'ws://127.0.0.1:8790/ws' :
     (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws';
   function readRoom() {
     try {
-      var value=JSON.parse(sessionStorage.getItem(STORE));
+      var value=null;
+      try { value=JSON.parse(sessionStorage.getItem(STORE)); } catch (_) {}
+      if (!value) {
+        value=JSON.parse(localStorage.getItem(STORE));
+        if (!value || !Number.isFinite(value.savedAt) || Date.now()-value.savedAt>RECOVERY_AGE) return null;
+      }
       if (value && /^[A-Z2-9]{5}$/.test(value.code) && /^[0-9a-f]{64}$/.test(value.token) &&
           (value.role==='host'||value.role==='guest')) return value;
     } catch (_) {}
     return null;
   }
   function saveRoom(value) {
-    credentials=value;
+    credentials=value; value.savedAt=Date.now();
+    try { localStorage.setItem(STORE,JSON.stringify(value)); } catch (_) {}
     try { sessionStorage.setItem(STORE,JSON.stringify(value)); } catch (_) {}
   }
   function forgetRoom() {
-    credentials=null;
+    var previous=credentials; credentials=null;
+    try {
+      var stored=JSON.parse(localStorage.getItem(STORE));
+      if (stored && previous && stored.token===previous.token) localStorage.removeItem(STORE);
+    } catch (_) {}
     try { sessionStorage.removeItem(STORE); } catch (_) {}
   }
   credentials=readRoom();
@@ -155,16 +166,30 @@
   }
 
   function leave() {
+    var abandoned=credentials, connected=socket && socket.readyState===WebSocket.OPEN;
     manualClose = true; stopRetry(); forgetRoom(); closeRtc();net={rtt:null,jitter:0,sent:0,lost:0,status:'disconnected'};probes={};peerKnown=false;nextProbe=0;
-    if (socket) { if (socket.readyState===WebSocket.OPEN) sendWs({type:'leave'}); socket.close(); socket = null; }
+    if (socket) { var previous=socket; if (previous.readyState===WebSocket.OPEN) sendWs({type:'leave'}); socket=null; previous.close(); }
+    // CANCELAR durante a reconexão também comunica a saída ao servidor.
+    if (abandoned && !connected) {
+      try {
+        var cancelSocket=new WebSocket(endpoint);
+        cancelSocket.onmessage=function () {};
+        cancelSocket.onerror=function () {};
+        cancelSocket.onopen=function () {
+          cancelSocket.send(JSON.stringify({type:'resume',code:abandoned.code,token:abandoned.token}));
+          cancelSocket.send(JSON.stringify({type:'leave'}));
+          cancelSocket.close();
+        };
+      } catch (_) {}
+    }
     hideOverlay();
   }
   function scheduleResume() {
-    if (manualClose || !credentials || reconnectTimer) return;
+    if (suspended || manualClose || !credentials || reconnectTimer) return;
     var delay=Math.min(10000,750*Math.pow(1.7,retry++));
     reconnectTimer=setTimeout(function () { reconnectTimer=null; openSocket('resume'); },delay);
   }
-  function openSocket(mode, code) {
+  function openSocket(mode, code, roomType) {
     if (socket) { var previous=socket; socket=null; previous.close(); }
     try { socket = new WebSocket(endpoint); }
     catch (_) { if (mode==='resume') scheduleResume(); else emit({type:'error',message:'SEM CONEXÃO'}); return; }
@@ -172,7 +197,7 @@
     active.onopen = function () {
       if (socket!==active) return;
       if (mode==='resume' && credentials) send({type:'resume',code:credentials.code,token:credentials.token});
-      else send(mode==='create' ? {type:'create'} : {type:'join',code:code});
+      else send(mode==='create' ? {type:'create',mode:roomType} : {type:'join',code:code,mode:roomType});
     };
     active.onmessage = function (event) {
       if (socket!==active) return;
@@ -180,7 +205,7 @@
         var msg = JSON.parse(event.data);
         if (!msg || typeof msg.type!=='string') return;
         if ((msg.type==='created'||msg.type==='joined'||msg.type==='resumed') && msg.code && msg.token) {
-          saveRoom({code:msg.code,token:msg.token,role:msg.role||(msg.type==='created'?'host':'guest')});
+          saveRoom({code:msg.code,token:msg.token,mode:msg.mode||'x1',role:msg.role||(msg.type==='created'?'host':'guest')});
           retry=0; stopRetry();
         }
         if (msg.type==='error' && mode==='resume') {
@@ -204,8 +229,8 @@
       } else emit({type:'error',message:'SEM CONEXÃO'});
     };
   }
-  function connect(mode,code) {
-    leave(); manualClose=false; retry=0; openSocket(mode,code);
+  function connect(mode,code,roomType) {
+    leave(); suspended=false; manualClose=false; retry=0; openSocket(mode,code,roomType);
   }
   function resume(force) {
     if (manualClose || !credentials) return false;
@@ -217,7 +242,7 @@
   }
   function restore() {
     if (!credentials) return false;
-    manualClose=false; retry=0; return resume(true);
+    suspended=false; manualClose=false; retry=0; return resume(true);
   }
   function hideOverlay() { if (overlay) { overlay.remove(); overlay = null; overlayStatus=null; } }
   function setStatus(value) { if (overlayStatus) overlayStatus.textContent=value; }
@@ -239,12 +264,13 @@
       'background:#ffe066;border:0;cursor:pointer;'; b.onclick=fn; return b;
   }
   function showLink(code) {
-    var link = 'https://bangu.kryventech.com.br/?sala=' + code;
+    var coop=credentials&&credentials.mode==='coop';
+    var link = 'https://bangu.kryventech.com.br/?sala=' + code+(coop?'&modo=coop':'');
     var card=box(), title=document.createElement('div');
     title.textContent='SALA ' + code; title.style.color='#ffe066'; card.appendChild(title);
     var url=document.createElement('div'); url.textContent=link;
     url.style.cssText='font:12px monospace;overflow-wrap:anywhere;margin:16px 0;'; card.appendChild(url);
-    var status=document.createElement('div'); status.textContent='AGUARDANDO ADVERSÁRIO...'; card.appendChild(status);
+    var status=document.createElement('div'); status.textContent=coop?'AGUARDANDO PARCEIRO...':'AGUARDANDO ADVERSÁRIO...'; card.appendChild(status);
     overlayStatus=status;
     card.appendChild(button('COPIAR',function () {
       if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(link)
@@ -258,7 +284,7 @@
     }));
     card.appendChild(button('CANCELAR',function () { leave(); emit({type:'cancel'}); }));
   }
-  function askText(title,max) {
+  function askText(title,max,options) {
     return new Promise(function (resolve) {
       var card=box(), label=document.createElement('label'); label.textContent=title;
       var input=document.createElement('input'); input.type='text'; input.maxLength=max;
@@ -269,22 +295,40 @@
       card.appendChild(label); card.appendChild(input);
       function done(value) { hideOverlay(); resolve(value); }
       card.appendChild(button('CONFIRMAR',function () { done(input.value); }));
-      card.appendChild(button('CANCELAR',function () { done(null); }));
+      card.appendChild(button(options&&options.cancelLabel||'CANCELAR',function () { done(null); }));
       setTimeout(function () { input.focus(); },50);
     });
   }
   function ranking() { return fetch(api+'/api/ranking',{cache:'no-store'}).then(function (r) { if (!r.ok) throw Error('offline'); return r.json(); }); }
   function score(row) { return fetch(api+'/api/score',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(row)})
     .then(function (r) { if (!r.ok) { var e=Error('score '+r.status); e.status=r.status; throw e; } return r.json(); }); }
+  // A suspensão nunca equivale a CANCELAR: conserva o token e libera o socket
+  // antes de o sistema congelar a página. Só a volta inicia novas tentativas.
+  function suspend() {
+    if (!credentials || manualClose) return;
+    suspended=true; saveRoom(credentials); stopRetry(); closeRtc();
+    var previous=socket; socket=null;
+    if (previous) previous.close();
+    emit({type:'reconnecting'});
+  }
+  function wake() {
+    if (!credentials || manualClose || !onMessage) return;
+    suspended=false;
+    if (!socket || socket.readyState!==WebSocket.CONNECTING) resume(true);
+  }
   document.addEventListener('visibilitychange',function () {
-    if (!document.hidden && credentials && !manualClose) resume(true);
+    if (document.hidden) suspend(); else wake();
   });
-  window.addEventListener('pageshow',function () {
-    if (credentials && !manualClose && onMessage && (!socket || socket.readyState!==WebSocket.CONNECTING)) resume(true);
-  });
+  document.addEventListener('freeze',suspend);
+  window.addEventListener('pagehide',suspend);
+  window.addEventListener('pageshow',wake);
   window.BanguOnline = {
     get pendingCode() { return new URLSearchParams(location.search).get('sala'); },
     set onMessage(fn) { onMessage=fn; },
+    createCoop:function(){connect('create',null,'coop');},
+    joinCoop:function(code){connect('join',String(code||'').trim().toUpperCase(),'coop');},
+    get pendingMode(){return new URLSearchParams(location.search).get('modo');},
+    scoreCoop:function(row){return score(Object.assign({},row,{modo:'coop'}));},
     create:function () { connect('create'); },
     join:function (code) { connect('join',String(code||'').trim().toUpperCase()); },
     restore:restore, leave:leave, send:send, tick:tick, metrics:metrics, showLink:showLink, hideOverlay:hideOverlay, setStatus:setStatus, askText:askText,
