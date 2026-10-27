@@ -291,7 +291,7 @@ for(const who of effects) {
   }
   assert.equal(fxGuest.transport.peer.closed,false,'desconectou durante '+who);
 }
-for(const label of ['CHUUUUVA','DANE-SE,','PORCOS','CORAM','MINHA REDACAO:'])
+for(const label of ['CHUUUUVA','DANE-SE,','PORCOS','CORAM','LAMINAS!'])
   assert(fxGuest.textSeen.has(label),'efeito ausente no convidado: '+label);
 assert(fxGuest.online.heardId>0,'convidado não recebeu eventos de som');
 const snapshots=fxHost.transport.sent.filter(m=>m.type==='snapshot');

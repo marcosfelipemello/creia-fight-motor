@@ -1,4 +1,4 @@
-/* Poses novas da Lorrany (artes em assets/lorrany): prancheta, fruta arremessada, xícara de café, defesa com a prancheta,
+/* Lorrany v3 (artes do dono em assets/lorrany): prancheta, fruta arremessada, xícara de café, defesa com a prancheta,
    garra do dreno e a maçã da cena. Só desenho; combate fica no game.js. */
 (function () {
   'use strict';
@@ -6,12 +6,12 @@
   var original = { draw: rig.draw, big: rig.big, portrait: rig.portrait, ready: rig.ready };
   var NAMES = ['base', 'arremesso', 'xicara', 'defesa', 'garra', 'maca'], images = null;
   // medidas na arte (360x465): chão entre os pés, altura da cabeça ao chão, pernas para a passada e rosto
-  var FEET = [165, 455], BODY = 451, HEAD = [112, 6, 104, 104];
-  var WALK = { waist: 299, split: 160, strip: 6, legs: [[245.4,  299],  [252,  320],  [286,  462],  [44,  462],  [76,  320],  [78.9,  299]] };   // a passada começa na virilha
+  var FEET = [165, 455], BODY = 428.35, HEAD = [86.35, 26.65, 120.25, 143];
+  var WALK = { waist: 334.75, split: 148.1, strip: 4, legs: [[0, 334.75], [360, 334.75], [360, 465], [0, 465]] };   // abaixo da virilha: as duas pernas já estão separadas
   function load() {
     if (images) return;
     images = {};
-    NAMES.forEach(function (n) { var im = new Image(); im.src = 'assets/lorrany/' + n + '.webp?v=1'; images[n] = im; });
+    NAMES.forEach(function (n) { var im = new Image(); im.src = 'assets/lorrany/' + n + '.webp?v=3'; images[n] = im; });
   }
   function loaded() { load(); return NAMES.every(function (n) { return images[n].complete && images[n].naturalWidth > 0; }); }
   window.LorranyArt = { img: function (n) { load(); return images[n]; }, ready: loaded };
@@ -77,6 +77,9 @@
     ctx.save(); ctx.imageSmoothingEnabled = false;
     ctx.drawImage(images.base, HEAD[0], HEAD[1], HEAD[2], HEAD[3], x, y, 28, 28); ctx.restore(); return true;
   };
-  // mão da garra na tela (para o dreno sair dos alvos e chegar nela)
-  rig.lorranyClaw = function (x, y, facing) { var k = rig.height / BODY; return { x: x + facing * (305 - FEET[0]) * k, y: y + (118 - FEET[1]) * k }; };
+  // Centro da prancheta na tela: compartilha a medida do visual do dreno.
+  rig.lorranyClaw = function (x, y, facing) {
+    var claw = window.LorranyVisual && window.LorranyVisual.claw || { x: 190, y: 210 }, k = rig.height / BODY;
+    return { x: x + facing * (claw.x - FEET[0]) * k, y: y + (claw.y - FEET[1]) * k };
+  };
 }());

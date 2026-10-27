@@ -78,7 +78,7 @@ Quem ataca de longe dá um golpe de perto quando o inimigo está colado na frent
 | 15 | **Lorrany** | Nutricionista | Frutas variadas arremessadas | Pancada com a xícara de café | **"RESTRIÇÃO ALIMENTAR, LOW CARB!"**: come a maçã e drena 20% da vida dos adversários à vista, recuperando 20% da dela |
 | 16 | **Arthur** | Cantor | Canto: ondinha sonora curta que empurra para trás | Come bolo: recupera 20 de vida | **"VÁ ESTUDAR"**: fica 3x mais rápido (na aventura, o time inteiro) |
 | 17 | **Lohan** | Fotógrafo | Flash do celular na ponta do estabilizador, que ofusca de perto | Câmera voadora que persegue o inimigo mais próximo | **Super flash**: três flashes estouram a tela e machucam todo monstro à vista |
-| 18 | **Emanuelly** | Estudante | Lápis ou caneta, reto e rápido, que atravessa um inimigo | Borracha em arco, que atordoa mais | **Redação nota mil**: ela lê a redação e as letras chovem sobre os inimigos |
+| 18 | **Emanuelly** | Gamer do console (baixinha) | A personagem invocada do console atira de longe | A invocada atira colada, de curtíssima distância | **"Vamos, Crow!!!"**: o Crow responde "Ka-kaw!" e chovem lâminas horizontais pela arena. Na defesa, o mascarado invocado segura o golpe com um escudo. |
 | 19 | **Ricardo** | Karatê e louvor | Soco | Rolagem pelo chão, acertando quem estiver no caminho | **"NÃO HÁ FERROLHOS… NEM PORRRTAAAAS!"**: despenca do céu com uma porta sobre o adversário |
 | 20 | **Adriene** | Confeiteira | Brigadeiro arremessado em arco curto | Colher de pau, que empurra o inimigo longe | **"É HORA DO BRIGADEIRO!"**: os ingredientes voam e prendem todo mundo na tela num brigadeiro gigante, que vai tirando vida |
 

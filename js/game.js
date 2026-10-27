@@ -656,7 +656,7 @@
     },
     nutri: { attack1: { dur: 0.28, hitAt: 0.1, dmg: 9, reach: 28, knock: 110, stun: 0.4 },
       attack2: { dur: 0.36, hitAt: 0.12, dmg: 12, reach: 34, knock: 140, stun: 0.5 } },   // xícara de café
-    emanuelly: { attack1: { dur: 0.28, hitAt: 0.1, dmg: 9, reach: 26, knock: 100, stun: 0.45 } },
+    emanuelly: {},
     grazi: { attack1: { dur: 0.28, hitAt: 0.1, dmg: 10, reach: 28, knock: 110, stun: 0.45 } },
     duda: { attack1: { dur: 0.26, hitAt: 0.08, dmg: 9, reach: 26, knock: 110, stun: 0.4 } },
     lucas: { attack1: { dur: 0.28, hitAt: 0.1, dmg: 10, reach: 30, knock: 120, stun: 0.45 },
@@ -972,11 +972,45 @@
       grav: 90, dmg: versus ? 3.8 : 6, knock: 40 * p.facing, pierce: 1, owner: p,counterKnock:p.attackKnock||1, rot: 0, vr: p.facing * 14, life: 1.4, hit: [], stun: 0.25 });
     sfx('throw');
   }
-  function throwPencil(p) {   // lápis ou caneta, reto e rápido, atravessa um monstro
-    p.penAlt = !p.penAlt;
-    shots.push({ k: p.penAlt ? 'caneta' : 'lapis', x: p.x + p.facing * 14, y: p.y, z: p.z + 32, vx: p.facing * 360, vy: 0, vz: 0,
-      grav: 0, dmg: versus ? 4.2 : 6, knock: 30 * p.facing, pierce: 2, owner: p,counterKnock:p.attackKnock||1, rot: p.facing < 0 ? Math.PI : 0, vr: 0, life: 1.1, hit: [], stun: 0.18 });
+  function shootEmanuelly(p,short) {
+    var cfg=window.CreiaCombat,rule=cfg.emanuelly,pose=short?'attack2':'throw';
+    var hand=window.Rig&&Rig.emanuellyMuzzle?Rig.emanuellyMuzzle(pose):null;
+    var muzzle=hand?{x:hand.x,z:-hand.y}:rule.muzzle[short?'secondary':'primary'];
+    var damage=short?cfg.secondary.emanuelly[1]:cfg.primary.emanuelly[versus?2:3];
+    var range=short?cfg.secondary.emanuelly[2]:cfg.primary.emanuelly[4],speed=short?rule.secondarySpeed:rule.primarySpeed;
+    var travel=Math.max(1,range-muzzle.x);
+    if(p.z>0)p.airThrowT=0.2;
+    shots.push({k:short?'manu-curto':'manu-tiro',manuShot:true,x:p.x+p.facing*muzzle.x,y:p.y,z:p.z+muzzle.z,
+      vx:p.facing*speed,vy:0,vz:0,grav:0,dmg:damage,knock:p.facing*(short?rule.secondaryKnock:rule.primaryKnock),
+      pierce:short?rule.secondaryPierce:rule.primaryPierce,owner:p,counterKnock:p.attackKnock||1,rot:0,vr:0,life:travel/speed,hit:[],
+      stun:short?rule.secondaryStun:rule.primaryStun,t:0});
     sfx('throw');
+  }
+  function rainEmanuelly(p) {
+    var cfg=window.CreiaCombat.emanuelly,dir=p.facing||1;
+    cfg.rainLanes.forEach(function(y,lane){
+      shots.push({k:'manu-lamina',manuShot:true,manuLamina:true,faixa:lane,t:0,born:time,
+        x:dir>0?cam-cfg.rainMargin:cam+W+cfg.rainMargin,y:y,z:cfg.rainHeights[p.manuWave%cfg.rainHeights.length],
+        vx:dir*cfg.rainSpeed,vy:0,vz:0,grav:0,dmg:cfg.rainDamage,knock:dir*cfg.rainKnock,pierce:cfg.bladePierce,
+        owner:p,rot:0,vr:0,life:(W+cfg.rainMargin*2)/cfg.rainSpeed,hit:[],stun:cfg.rainStun,
+        fromSpecial:true,specialBlocked:p.specialBlocked});
+    });
+    p.manuWave++;sfx('throw');
+  }
+  // Mesmo contrato para o visual local, snapshot do X1 e cooperativo. Sem referências circulares.
+  function emanuellyBlades() {
+    return shots.filter(function(s){return s.manuLamina&&s.life>0;}).map(function(s){return {
+      x:netRound(s.x),y:netRound(s.y),z:netRound(s.z),vx:s.vx,dir:sign(s.vx),faixa:s.faixa,t:netRound(s.t),
+      born:netRound(s.born),life:netRound(s.life),owner:players.indexOf(s.owner)};});
+  }
+  function emanuellyContact(s,target,fromX) {
+    var cfg=window.CreiaCombat.emanuelly,short=s.k==='manu-curto';
+    var radius=s.manuLamina?cfg.bladeRadius:short?cfg.secondaryRadius:cfg.primaryRadius;
+    var depth=s.manuLamina?cfg.bladeDepth:short?cfg.secondaryDepth:cfg.primaryDepth;
+    // Volume varrido: não pula alvos entre frames. Tolerância vertical acompanha as invocações altas.
+    var vertical=s.manuLamina?radius:cfg.shotVerticalRadius;
+    return Math.abs(target.y-s.y)<=depth && s.z+radius>=(target.z||0) && s.z-vertical<=(target.z||0)+(target.h||70) &&
+      Math.min(fromX,s.x)-radius<=target.x+(target.w||24)/2 && Math.max(fromX,s.x)+radius>=target.x-(target.w||24)/2;
   }
   function shootGlue(p) {
     if(p.z>0)p.airThrowT=0.2;   // gota de cola quente: gruda o monstro (fica lento por um tempo)
@@ -1116,11 +1150,6 @@
     shots.push({ k: 'basquete', x: p.x + p.facing * 12, y: p.y, z: p.z + 34, vx: p.facing * (three ? 230 : 280), vy: 0, vz: three ? 260 : 90,
       grav: 520, dmg: three ? (versus ? 8.5 : 14) : (versus ? 4.5 : 7), knock: (three ? 110 : 60) * p.facing, pierce: three ? 2 : 1, owner: p,counterKnock:p.attackKnock||1, rot: 0, vr: p.facing * 9,
       life: 2.2, hit: [], stun: three ? 0.6 : 0.3, bounces: 2 });
-    sfx('throw');
-  }
-  function throwEraser(p) {   // borracha em arco: atordoa mais
-    shots.push({ k: 'borracha', x: p.x + p.facing * 12, y: p.y, z: p.z + 32, vx: p.facing * 250, vy: 0, vz: 150,
-      grav: 420, dmg: versus ? 7.5 : 11, knock: 90 * p.facing, pierce: 1, owner: p,counterKnock:p.attackKnock||1, rot: 0, vr: p.facing * 12, life: 1.6, hit: [], stun: 0.6 });
     sfx('throw');
   }
   // Aproxima até ~30 unidades, sem atravessar o dono nem ignorar defesa.
@@ -1380,7 +1409,7 @@
     } else if (p.who === 'enzo') {
       p.inv = 2.6 + CINE; p.noteT = 0; p.healed = 0; p.soloOn = false; cine = { p: p, t: 0 }; sfx('cutin');
     } else if (p.who === 'emanuelly') {
-      p.inv = 3 + CINE; p.letterT = 0; cine = { p: p, t: 0 }; sfx('cutin');
+      p.inv=window.CreiaCombat.emanuelly.specialDuration+cineDuration(p);p.manuRainAt=window.CreiaCombat.emanuelly.rainStart;p.manuWave=0;cine={p:p,t:0};sfx('cutin');
     } else {
       p.inv = 2.4 + CINE; p.soloOn = false; p.soloDone = false; p.noteT = 0;
       cine = { p: p, t: 0 }; sfx('cutin');
@@ -1546,21 +1575,10 @@
           fromSpecial: true, specialBlocked: p.specialBlocked });
       }
       if (p.st >= 2.4) setState(p, 'idle');
-    } else if (p.who === 'emanuelly') {   // lê a redação; depois as letras chovem nos monstros
-      if (p.st > 0.2 && !p.readSfx) { p.readSfx = true; sfx('page'); }
-      p.letterT -= dt;
-      if (p.st >= 1.45 && p.st < 2.5 && p.letterT <= 0) {
-        p.letterT = 0.03;
-        var alvos = enemies.filter(function (e) { return !e.dying && e.x > cam - 10 && e.x < cam + W + 10; })
-          .concat(bosses.filter(function (b) { return !b.dead && b.hp > 0; }));
-        var a = alvos.length && Math.random() < 0.8 ? pick(alvos) : { x: cam + rnd(30, W - 30), y: rnd(TOP, BOT) };
-        shots.push({ k: 'estrela', ch: pick('REDACAONOTAMIL'.split('')), col: pick(['#ffe066', '#ff8fc0', '#9fd8ff', '#c89bff', '#7dff8a']),
-          x: a.x + rnd(-12, 12), y: clamp(a.y + rnd(-5, 5), TOP, BOT), z: rnd(200, 280), vx: 0, vy: 0, vz: -140, grav: 520,
-          dmg: 9, knock: rnd(-40, 40), pierce: 1, owner: p,counterKnock:p.attackKnock||1, rot: rnd(-0.4, 0.4), vr: rnd(-3, 3), life: 3, hit: [], stun: 0.45,
-          fromSpecial: true, specialBlocked: p.specialBlocked });
-        if (Math.random() < 0.25) sfx('throw');
-      }
-      if (p.st >= 2.7) { p.readSfx = false; setState(p, 'idle'); }
+    } else if (p.who === 'emanuelly') {
+      var manuCfg=window.CreiaCombat.emanuelly;
+      while(p.st>=p.manuRainAt && p.manuRainAt<manuCfg.rainEnd){rainEmanuelly(p);p.manuRainAt+=manuCfg.rainInterval;}
+      if(p.st>=manuCfg.specialDuration)setState(p,'idle');
     } else {   // solo de guitarra: notas voam até ela e no fim vêm o escudo e o Hiper-Nutri
       if (!p.soloOn) { p.soloOn = true; sfx('solo'); }
       p.noteT -= dt;
@@ -1832,8 +1850,9 @@
         else if(p.who==='douglinhas'){kickDouglinhas(p);p.cd=window.CreiaCombat.primaryCooldown(p.who,versus);if(p.z===0)setState(p,'throw');}
         else if(p.who==='th'){shootTh(p,false);p.cd=window.CreiaCombat.primaryCooldown(p.who,versus);if(p.z===0)setState(p,'throw');}
         else if (p.who === 'cardoso') { if (p.z === 0) startAtk(p, 'attack1'); slapWave(p); p.cd=window.CreiaCombat.primaryCooldown(p.who,versus); }
+        else if(p.who==='emanuelly'){shootEmanuelly(p,false);p.cd=window.CreiaCombat.primaryCooldown(p.who,versus);if(p.z===0)setState(p,'throw');}
         else if (p.who!=='fidelis' && p.z === 0 && enemyInFront(p, 22)) startAtk(p, 'attack1');
-        else if (p.who === 'emanuelly') { throwPencil(p); p.cd=window.CreiaCombat.primaryCooldown(p.who,versus); if (p.z === 0) setState(p, 'throw'); }
+
         else if (p.who === 'enzo') { throwBall(p, false); p.cd=window.CreiaCombat.primaryCooldown(p.who,versus); if (p.z === 0) setState(p, 'throw'); }
         else if (p.who === 'pedro') { shootNote(p); p.cd=window.CreiaCombat.primaryCooldown(p.who,versus); if (p.z === 0) setState(p, 'throw'); }
         else if (p.who === 'naju') { if (!p.micOut) { throwMic(p); setState(p, 'throw'); p.cd=window.CreiaCombat.primaryCooldown(p.who,versus); } }
@@ -1857,7 +1876,7 @@
       else if(p.who==='douglinhas'){setState(p,'attack2');p.altCd=1.0;sfx('whoosh');}
       else if(p.who==='th'){shootTh(p,true);p.altCd=0.9;setState(p,'throw');}
       else if (p.who === 'lutador') { setState(p, 'throw'); p.altCd = 0.9 / 1.15; sfx('whoosh'); }
-      else if (p.who === 'emanuelly') { throwEraser(p); p.altCd = 0.45; setState(p, 'throw'); }
+      else if(p.who==='emanuelly'){shootEmanuelly(p,true);p.altCd=window.CreiaCombat.secondaryCooldown(p.who,versus);setState(p,'attack2');}
       else if (p.who === 'enzo') { throwBall(p, true); p.altCd = 0.6; setState(p, 'throw'); }
       else if (p.who === 'naju') { if (!p.micOut) { setState(p, 'attack2'); p.spinHits = 0; p.altCd = 0.7; sfx('whoosh'); } }
       else if (p.who === 'grazi') { setState(p, 'attack2'); p.spinHits = 0; p.altCd = 1.1; sfx('furacao'); }
@@ -1930,6 +1949,7 @@
       if (p.st >= 0.45) setState(p, 'idle');
     }
     if(p.who==='pedro' && p.state==='attack2' && p.st>=.34)setState(p,'idle');
+    if(p.who==='emanuelly'&&p.state==='attack2'&&p.st>=window.CreiaCombat.emanuelly.secondaryDuration)setState(p,'idle');
     if (p.state === 'jumpkick' && !p.hitDone && p.st > 0.04 && meleeHit(p,ATK.lutador.jumpkick)) p.hitDone = true;
     if (p.state === 'throw') {
       if (p.who === 'fidelis') {
@@ -2020,7 +2040,7 @@
     }
     var aiGround=p.state==='idle'||p.state==='walk'||p.state==='throw'&&p.who!=='lutador',aiPrimary=aiGround||p.state==='jump'||p.state==='jumpkick'||p.who==='lutador'&&/^attack[12]$/.test(p.state)&&p.st>.05;
     var observation={time:time,hp:p.hp/p.maxHp,sp:aiGround?p.sp:0,direction:dir,distance:Math.abs(target.x-p.x),aligned:Math.abs(target.y-p.y)<20,yDirection:sign(target.y-p.y),horizontal:versus,
-      melee:p.who==='lutador'||p.who==='ricardo',range:range,primaryReady:aiPrimary&&p.cd<=0,altReady:aiGround&&p.altCd<=0,altRange:meta[2],secondaryMelee:meta[2]<=60||p.who==='fidelis',mobilitySecondary:p.who==='rafinha',support:['bispo','arthur','duda'].indexOf(p.who)>=0,healSpecial:p.who==='nutri'||p.who==='duda',
+      melee:p.who==='lutador'||p.who==='ricardo',range:range,primaryReady:aiPrimary&&p.cd<=0,altReady:aiGround&&p.altCd<=0,altRange:meta[2],secondaryMelee:meta[2]<=60||p.who==='fidelis'||p.who==='emanuelly',mobilitySecondary:p.who==='rafinha',support:['bispo','arthur','duda'].indexOf(p.who)>=0,healSpecial:p.who==='nutri'||p.who==='duda',
       canGuard:versus&&(aiGround||p.state==='guard')&&p.z===0&&p.guardCd<=0&&p.guardHp>=16,canJump:p.z===0&&(p.state==='idle'||p.state==='walk'||p.state==='throw'),cornered:versus&&(dir>0?p.x<cam+60:p.x>cam+W-60),foeProtected:foe.shield>0||foe.limadoT>0,foeGuard:foe.state==='guard'||!!foe.guard,foeInv:foe.inv>0||foe.shield>0,foeRecovering:foe.state==='hurt'||foe.cd>.3,threat:incoming||Math.abs(target.x-p.x)<100&&(foe.state==='warn'||foe.state==='attack'||/^attack/.test(foe.state)||foe.state==='special'),intent:p.jevUntil>time?p.jevIntent:null};
     observation.impactIn=impactIn;observation.perfectThreat=Number.isFinite(impactIn);observation.perfectReady=time-p.guardEndT>=cfg.perfeita.descanso;observation.counterReady=p.contraT>0;
     var brainLvl=typeof level==='number'&&(!cfg.levelAt)?(level<0.4?'facil':level<0.85?'medio':'dificil'):level;
@@ -2092,7 +2112,7 @@
         if (p.who === 'adriene' && p.altCd <= 0 && enemyInFront(p, 40) && Math.random() < 0.25) c.alt = true;
         if (p.who === 'arthur' && p.altCd <= 0 && p.hp < p.maxHp * 0.6) c.alt = true;   // come bolo quando está machucado
         if (p.who === 'enzo' && p.altCd <= 0 && Math.random() < 0.08) c.alt = true;
-        if (p.who === 'emanuelly' && p.altCd <= 0 && Math.random() < 0.05) c.alt = true;
+        if (p.who === 'emanuelly' && p.altCd <= 0 && enemyInFront(p,window.CreiaCombat.secondary.emanuelly[2]) && Math.random() < 0.05) c.alt = true;
         if (p.who === 'rafinha' && p.altCd <= 0 && Math.random() < 0.04) c.alt = true;
         if (p.who === 'grazi' && p.altCd <= 0 && enemyInFront(p, 36)) c.alt = true;
         if (p.who === 'naju' && p.altCd <= 0 && enemyInFront(p, 34)) c.alt = true;
@@ -2227,7 +2247,12 @@
         s.z += ((hb ? 26 : 44) - s.z) * Math.min(1, dt * 3);
       }
       var fidFrom=s.fidControl?(s.sweepX==null?s.x:s.sweepX):s.x;
-      s.x += s.vx * dt; s.y += s.vy * dt; s.vz -= s.grav * dt; s.z += s.vz * dt; s.rot += s.vr * dt; s.life -= dt;
+      var manuFrom=s.x,manuStep=dt;
+      if(s.manuShot){manuStep=Math.min(dt,Math.max(0,s.life));s.t+=manuStep;}
+      s.x += s.vx * manuStep; s.y += s.vy * dt; s.vz -= s.grav * dt; s.z += s.vz * dt; s.rot += s.vr * dt; s.life -= dt;
+      var manuExpired=s.manuShot&&s.life<=0;
+      if(manuExpired)s.life=0.000001;   // verifica o segmento final, sem prolongar o alcance
+
       if(s.fidControl){s.sweepX=s.x;if(s.z<s.fidPlane){s.z=s.fidPlane;s.vz=0;}}
       if(s.thTv){if(!s.thLanded && s.z<=s.thImpactZ)impactThTv(s);return;}
       if(s.rcDoor){if(!s.rcLanded&&s.z<=s.rcImpact)ricardoImpact(s);return;}
@@ -2238,16 +2263,16 @@
       enemies.forEach(function (e) {
         if (s.life <= 0 || e.dying || s.hit.indexOf(e) >= 0) return;
         var flameSpread=s.k==='pedro-12'?20:0;
-        if (s.fidControl?window.CreiaCombat.fidelis.projectileContact(s,e,fidFrom):Math.abs(e.x - s.x) < e.w / 2 + 6 && Math.abs(e.y - s.y) < 14+flameSpread*.4 && s.z >= e.z - 4-flameSpread && s.z <= e.z + e.h + 4+flameSpread) {
+        if (s.manuShot?emanuellyContact(s,e,manuFrom):s.fidControl?window.CreiaCombat.fidelis.projectileContact(s,e,fidFrom):Math.abs(e.x - s.x) < e.w / 2 + 6 && Math.abs(e.y - s.y) < 14+flameSpread*.4 && s.z >= e.z - 4-flameSpread && s.z <= e.z + e.h + 4+flameSpread) {
           s.hit.push(e);var hpBefore=e.hp; hitEnemy(e, s.dmg, s.knock, s.owner, s);if(s.k==='halter'&&e.hp<hpBefore&&!e.guard)pullDumbbell(e,s.owner,false); if (s.glue) { e.glueT = 2.5; floatText(e.x, e.y - e.h - 8, 'GRUDOU!', '#ffe9a8'); } burst('estrela', s.x, s.y, s.z, 2); sfx('hit');
           if (--s.pierce <= 0) s.life = 0;
         }
       });
       bosses.forEach(function (b) {
         if (s.life <= 0 || b.dead || !(b.hp > 0) || s.hit.indexOf(b) >= 0 || (b.vs && b.vs === s.owner)) return;
-        if (s.fidControl?window.CreiaCombat.fidelis.projectileContact(s,b,fidFrom):Math.abs(b.x - s.x) < b.w / 2 + 4 && Math.abs(b.y - s.y) < 26 && s.z >= b.z - 6 && s.z <= b.z + b.h + 6) {
+        if (s.manuShot?emanuellyContact(s,b,manuFrom):s.fidControl?window.CreiaCombat.fidelis.projectileContact(s,b,fidFrom):Math.abs(b.x - s.x) < b.w / 2 + 4 && Math.abs(b.y - s.y) < 26 && s.z >= b.z - 6 && s.z <= b.z + b.h + 6) {
           s.hit.push(b);
-          var hpBefore=b.hp;var hitOk = hitBoss(b, s.dmg, s.owner, !!s.fromSpecial, s.specialBlocked, s.fromSpecial ? 40 : 24, fidFrom, true,s.counterKnock);
+          var hpBefore=b.hp;var hitOk = hitBoss(b, s.dmg, s.owner, !!s.fromSpecial, s.specialBlocked, s.manuShot?Math.abs(s.knock):s.fromSpecial ? 40 : 24, s.manuShot?manuFrom:fidFrom, true,s.counterKnock);
           if(s.k==='halter'&&(b.vs?hitOk:b.hp<hpBefore))pullDumbbell(b.vs||b,s.owner,!b.vs);
           if (b.vs && !hitOk) {
             s.life = 0; burst('brilho', s.x, s.y, s.z, 4);
@@ -2257,6 +2282,7 @@
           }
         }
       });
+      if(manuExpired)s.life=0;
       if (!s.yoyo && !s.homing && (s.x < cam - 40 || s.x > cam + W + 40) && !(s.enzoRain && (s.vx > 0 && s.x < cam || s.vx < 0 && s.x > cam + W))) s.life = 0;
       if (s.homing && (s.x < cam - 120 || s.x > cam + W + 120)) s.life = 0;
     });
@@ -2842,7 +2868,7 @@
     }
     if (p.state === 'guard' || p.guardFlash > 0) drawGuardBarrier(sx, sy, p.facing, p.guardT, p.guardFlash);
     if (p.dead && players.some(function (q) { return q !== p && !q.dead; })) txt(String(Math.max(0, Math.ceil(8 - p.koT))), sx, sy - 30, '#ff8fc0', 'center');
-    if (!p.dead && p.state !== 'taunt' && scene === 'play' && !kissFocus() && !petFocus() && !soloFocus() && !readFocus() && !shoutFocus() && !auraFocus() && !stareFocus() && !cardosoFocus() && !pigFocus() && !coramFocus()) txt(p.ai ? 'IA' : 'P' + (p.ctl + 1), sx, sy - 88, p.ai ? '#9fd8ff' : PCOL[p.ctl], 'center');
+    if (!p.dead && p.state !== 'taunt' && scene === 'play' && !kissFocus() && !petFocus() && !soloFocus() && !shoutFocus() && !auraFocus() && !stareFocus() && !cardosoFocus() && !pigFocus() && !coramFocus()) txt(p.ai ? 'IA' : 'P' + (p.ctl + 1), sx, sy - 88, p.ai ? '#9fd8ff' : PCOL[p.ctl], 'center');
   }
   function drawTaunts() {
     var list=players.filter(function(p){return !p.dead&&p.state==='taunt';}).sort(function(a,b){return a.x-b.x;});
@@ -2998,9 +3024,10 @@
     });
     if (cat) { shadow(Math.round(cat.x - cx), cat.y, 18); list.push({ y: cat.y, f: function () { spr('drawCat', ctx, cat.state, cat.st, Math.round(cat.x - cx), cat.y); } }); }
     shots.forEach(function (s) {
-      if(s.k==='ric-porta')return;
+      if(s.k==='ric-porta'||s.manuLamina&&window.EmanuellyVisual&&typeof EmanuellyVisual.laminas==='function')return;
       if (s.grav > 0 || s.k === 'halter') shadow(Math.round(s.x - cx), Math.round(s.y), 8);
       list.push({ y: s.y, f: function () {
+        if((s.manuShot||s.k==='manu-tiro'||s.k==='manu-curto')&&window.Rig&&Rig.emanuellyShot){Rig.emanuellyShot(ctx,s,cx,time);return;}
         if (s.yoyo) {   // fio do microfone até a mão dela
           var o2 = s.owner, hx2 = Math.round(o2.x - cx + o2.facing * 13), hy2 = Math.round(o2.y - o2.z - 37);
           ctx.strokeStyle = '#111'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(hx2, hy2);
@@ -3051,6 +3078,12 @@
     });
     list.sort(function (a, b) { return a.y - b.y; });
     list.forEach(function (o) { o.f(); });
+    if(window.EmanuellyVisual&&typeof EmanuellyVisual.laminas==='function'){
+      var manuList=emanuellyBlades();
+      // O renderer de cinco argumentos desconta 30px da altura; o contrato novo recebe z absoluto.
+      if(EmanuellyVisual.laminas.length>=5)EmanuellyVisual.laminas(ctx,manuList.map(function(l){return Object.assign({},l,{z:l.z-30});}),cx,time,{img:function(n){return window.EmanuellyArt&&EmanuellyArt.img(n);}});
+      else EmanuellyVisual.laminas(ctx,manuList,cx,time);
+    }
     shots.forEach(function(s){if(s.k==='ric-porta')spr('drawItem',ctx,'ric-porta',Math.round(s.x-cx),Math.round(s.y-s.z),s.rot,1);});
     parts.forEach(function (p) {
       ctx.globalAlpha = clamp(p.life / Math.min(0.4, p.max), 0, 1);
@@ -3184,14 +3217,6 @@
     var k = smooth(0.05, 0.3, p.st) * (1 - smooth(p.who === 'enzo' ? 1.5 : 1.2, p.who === 'enzo' ? 1.8 : 1.45, p.st));
     return k > 0 ? { p: p, k: k, x: p.x - cam, y: p.y - p.z - 40 } : null;
   }
-  // 0..1 enquanto a Emanuelly lê a redação (depois do corte); o inserto abre nela
-  function readFocus() {
-    if (cine) return null;
-    var p = players.find(function (q) { return q.who === 'emanuelly' && q.state === 'special'; });
-    if (!p) return null;
-    var k = smooth(0.05, 0.3, p.st) * (1 - smooth(1.2, 1.5, p.st));
-    return k > 0 ? { p: p, k: k } : null;
-  }
   function auraFocus() {   // close do Douglas: a câmera aproxima no rosto e ele pega fogo
     if (cine) return null;
     var p = players.find(function (q) { return q.who === 'douglas' && q.state === 'special'; });
@@ -3244,7 +3269,7 @@
     return players.find(function (p) {
       if (p.state !== 'special' || p.dead) return false;
       if (p.who === 'cardoso') return p.st < 2.6;
-      if (p.who === 'emanuelly') return p.st < 1.45;
+      if (p.who === 'emanuelly') return false;
       if (p.who === 'douglas') return p.st < 2.1;
       if (p.who === 'lucas') return p.st < 2.1;
       if (p.who === 'arthur') return p.st < 4.3;
@@ -3278,8 +3303,7 @@
     var k = smooth(0.05, 0.3, p.st) * (1 - smooth(2.0, 2.3, p.st));
     return k > 0 ? { p: p, k: k } : null;
   }
-  var REDACAO = ['MINHA REDACAO:', 'A FOME NAO VAI', 'VENCER BANGU!', 'COMIDA DE VERDADE', 'NOTA MIL!'];
-  function cineDuration(p) { return p && p.who==='fidelis'?3:p && p.who==='pedro' && window.PedroFX?window.PedroFX.duration:p && p.who==='adriene'&&window.AdrieneVisual?window.AdrieneVisual.duration:p && p.who==='nutri'&&window.LorranyVisual?window.LorranyVisual.duration:p && p.who==='ricardo'?RIC_CINE:p && p.who==='douglinhas' ? DGL_DURATION : p && p.who==='th' ? TH_DURATION : p && p.who==='bispo' ? 2.6 : CINE; }
+  function cineDuration(p) { return p&&p.who==='emanuelly'?(window.EmanuellyVisual&&EmanuellyVisual.duration>0?EmanuellyVisual.duration:window.CreiaCombat.emanuelly.cineDuration):p && p.who==='fidelis'?3:p && p.who==='pedro' && window.PedroFX?window.PedroFX.duration:p && p.who==='adriene'&&window.AdrieneVisual?window.AdrieneVisual.duration:p && p.who==='nutri'&&window.LorranyVisual?window.LorranyVisual.duration:p && p.who==='ricardo'?RIC_CINE:p && p.who==='douglinhas' ? DGL_DURATION : p && p.who==='th' ? TH_DURATION : p && p.who==='bispo' ? 2.6 : CINE; }
   function drawBispoCine(t) {
     var duration=cineDuration(cine.p);
     var inn=smooth(0.05,0.25,t),out=smooth(duration-0.3,duration-0.05,t);
@@ -3489,35 +3513,6 @@
       ctx.fillStyle = '#0b0a10'; ctx.fillRect(0, 0, W, sbr); ctx.fillRect(0, H - sbr, W, sbr);
       return;
     }
-    var rf = readFocus();
-    if (rf) {   // close: folha de caderno, ela lendo e as letras saindo do caderno
-      var p = rf.p, ox0 = p.x - cam, oy0 = p.y - 40, R0 = Math.hypot(W, H) * rf.k;
-      var cx0 = ox0 + (W / 2 - ox0) * rf.k, cy0 = oy0 + (H / 2 - oy0) * rf.k;
-      ctx.save(); ctx.beginPath(); ctx.arc(cx0, cy0, R0, 0, Math.PI * 2); ctx.clip();
-      ctx.fillStyle = '#fbf6e6'; ctx.fillRect(0, 0, W, H);
-      ctx.fillStyle = '#b8d4f0'; for (var ly = 20; ly < H; ly += 14) ctx.fillRect(0, ly, W, 1);
-      ctx.fillStyle = '#f08aa8'; ctx.fillRect(56, 0, 2, H);
-      var pt = Math.max(0, p.st - 0.25), shown = Math.floor(pt * 34), acc = 0;
-      REDACAO.forEach(function (l, i) {   // a redação sendo escrita na folha
-        var s = l.slice(0, Math.max(0, shown - acc)); acc += l.length;
-        if (s) txt(s, 272, 62 + i * 28, i === 4 ? '#d0306a' : '#2a3a7a', 'left', i === 4 ? 16 : 8);
-      });
-      var BX = 175, BY = 262, BS2 = 2.3, ox1 = BX + 20.8 * BS2, oy1 = BY - 43 * BS2;   // ox1/oy1: o caderno na mão dela
-      ctx.save(); ctx.translate(BX, BY);
-      if (!(window.Rig && window.Rig.big(ctx, 'emanuelly', 'special', 0.6 + p.st * 0.6, 0, 0, 1, BS2))) spr('drawChibi', ctx, 'emanuelly', 'special', p.st, 0, 0, 1, {});
-      ctx.restore();
-      for (var li = 0; li < 18; li++) {   // letras saindo do caderno
-        var u = ((p.st * 0.9 + li * 0.137) % 1), ang = -0.4 + ((li * 5) % 9) * 0.12;
-        var lx = ox1 + Math.cos(ang) * u * 200 + 30 * u, lyy = oy1 + Math.sin(ang) * u * 150;
-        ctx.save(); ctx.globalAlpha = Math.min(1, (1 - u) * 3) * Math.min(1, u * 6); ctx.translate(lx, lyy); ctx.rotate(Math.sin(li + p.st * 4) * 0.5);
-        txt('REDACAONOTAMIL'[li % 14], 0, -8, ['#ffe066', '#ff8fc0', '#9fd8ff', '#c89bff', '#7dff8a'][li % 5], 'center', 16); ctx.restore();
-      }
-      ctx.restore();
-      ctx.strokeStyle = '#c89bff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(cx0, cy0, R0, 0, Math.PI * 2); ctx.stroke();
-      var br = Math.round(24 * rf.k);
-      ctx.fillStyle = '#0b0a10'; ctx.fillRect(0, 0, W, br); ctx.fillRect(0, H - br, W, br);
-      return;
-    }
     var sf = soloFocus();
     if (sf) {   // palco: vinheta roxa, holofotes balançando e faixas de cinema
       var gs = ctx.createRadialGradient(W / 2, H / 2, 60, W / 2, H / 2, 300);
@@ -3582,6 +3577,11 @@
     }
     if (!cine) return;
     var t = cine.t, p = cine.p;
+    if(p.who==='emanuelly'&&window.EmanuellyVisual&&typeof EmanuellyVisual.cena==='function'){
+      var io={t:t,duration:cineDuration(p),p:p,cam:cam,time:time,img:function(n){return window.EmanuellyArt&&EmanuellyArt.img(n);},text:txt,cenario:function(g){bg('draw',g,stage,Math.round(cam),time);}};   // a arena de verdade por trás da chuva de lâminas
+      if(EmanuellyVisual.cena.length>=5)EmanuellyVisual.cena(ctx,t,W,H,io);else EmanuellyVisual.cena(ctx,W,H,io);
+      return;
+    }
     if(p.who==='fidelis' && window.FidelisVisual){FidelisVisual.cinematic(ctx,t,W,H);return;}
     if(p.who==='pedro' && window.PedroFX){drawPedroCine(t);return;}
     if(p.who==='bispo') { drawBispoCine(t); return; }
@@ -3590,11 +3590,12 @@
     if(p.who==='ricardo'){drawRicardoCine(t);return;}
     if(p.who==='nutri'&&window.LorranyVisual){LorranyVisual.cinematic(ctx,t,W,H,{img:function(n){return window.LorranyArt&&LorranyArt.img(n);},text:txt});return;}
     if(p.who==='adriene'&&window.AdrieneVisual){AdrieneVisual.cinematic(ctx,t,W,H,{hero:function(c,x,y,s,tt){if(window.Rig)Rig.big(c,'adriene','special',tt,x,y,1,s);},text:txt});return;}
+    if(p.who==='emanuelly')t*=CINE/cineDuration(p);   // o corte padrão ocupa toda a duração configurada
     var dark = smooth(0, 0.08, t) * (1 - smooth(CINE - 0.15, CINE, t));
     ctx.fillStyle = 'rgba(12,4,22,' + (0.7 * dark) + ')'; ctx.fillRect(0, 0, W, H);
     // a Nutri continua acesa e brilha em rosa por cima do escuro
     var me = p.who === 'nutri', em = p.who === 'emanuelly', ez = p.who === 'enzo', pg = p.who === 'pedro', nj = p.who === 'naju', gz = p.who === 'grazi', bi = p.who === 'bispo', lo = p.who === 'lohan', rf = p.who === 'rafinha', dg = p.who === 'douglas', fd = p.who === 'fidelis', at = p.who === 'arthur', lg = p.who === 'lucas', du = p.who === 'duda', lc = p.who === 'cardoso';
-    spr('drawChibi', ctx, p.who, me ? 'victory' : 'special', me ? t : 0.6, Math.round(p.x - cam), Math.round(p.y - p.z), p.facing, { flash: Math.floor(t * 16) % 2 === 0 && t < 0.3 });
+    spr('drawChibi', ctx, p.who, me ? 'victory' : em ? 'cutin' : 'special', me ? t : 0.6, Math.round(p.x - cam), Math.round(p.y - p.z), p.facing, { flash: Math.floor(t * 16) % 2 === 0 && t < 0.3 });
     // faixa inclinada que atravessa a tela com o rosto dela grande
     var inn = smooth(0.05, 0.25, t), out = smooth(CINE - 0.3, CINE - 0.05, t);
     var y0 = 74, y1 = 186, sk = 40, off = (1 - inn) * -(W + sk) + out * (W + sk);
@@ -3634,8 +3635,8 @@
     ctx.fillStyle = '#ffe066'; ctx.fillRect(Math.round(off + sk), y0 - 2, W, 2); ctx.fillRect(Math.round(off), y1, W, 2);
     // nome do golpe entra pelo lado oposto
     var tx = W - 18 + (1 - inn) * (W) - out * (W + 60);
-    txt(me ? 'BEIJINHO' : em ? 'REDACAO' : ez ? 'CHUVA DE' : pg ? 'HARMONIA BIZARRAMENTE' : nj ? 'SOLTA' : gz ? 'VÃO, MINHAS' : bi ? 'VOCÊS SÃO' : lo ? 'SUPER' : rf ? 'CHUVA DE' : dg ? 'DANE-SE,' : fd ? 'INVERSÃO' : at ? 'VÁ ESTUDAR' : lg ? 'PORCOS' : du ? 'CORAM' : lc ? 'LIMADOS' : 'SOLO DE', tx, pg ? 120 : 116, '#fff', 'right', pg ? 12 : 20);
-    txt(me ? 'DE CURA' : em ? 'NOTA MIL!' : ez ? 'BASQUETE!' : pg ? 'TORTAAAA!' : nj ? 'A VOZ!' : gz ? 'CRIANÇAS!' : bi ? 'INDESCULPÁVEIS!' : lo ? 'FLASH!' : rf ? 'PRATO!' : dg ? 'FARMAR AURA!' : fd ? 'DE ACORDE!' : at ? 'UM POUQUINHO!' : lg ? 'NA SALA!' : du ? 'DEO!' : lc ? 'COM SUCESSO!' : 'GUITARRA!', tx - 10, 142, me || em || bi ? '#ffe066' : '#7dff8a', 'right', bi ? 18 : 20);
+    txt(me ? 'BEIJINHO' : em ? 'CHUVA DE' : ez ? 'CHUVA DE' : pg ? 'HARMONIA BIZARRAMENTE' : nj ? 'SOLTA' : gz ? 'VÃO, MINHAS' : bi ? 'VOCÊS SÃO' : lo ? 'SUPER' : rf ? 'CHUVA DE' : dg ? 'DANE-SE,' : fd ? 'INVERSÃO' : at ? 'VÁ ESTUDAR' : lg ? 'PORCOS' : du ? 'CORAM' : lc ? 'LIMADOS' : 'SOLO DE', tx, pg ? 120 : 116, '#fff', 'right', pg ? 12 : 20);
+    txt(me ? 'DE CURA' : em ? 'LÂMINAS!' : ez ? 'BASQUETE!' : pg ? 'TORTAAAA!' : nj ? 'A VOZ!' : gz ? 'CRIANÇAS!' : bi ? 'INDESCULPÁVEIS!' : lo ? 'FLASH!' : rf ? 'PRATO!' : dg ? 'FARMAR AURA!' : fd ? 'DE ACORDE!' : at ? 'UM POUQUINHO!' : lg ? 'NA SALA!' : du ? 'DEO!' : lc ? 'COM SUCESSO!' : 'GUITARRA!', tx - 10, 142, me || em || bi ? '#ffe066' : '#7dff8a', 'right', bi ? 18 : 20);
     if (t < 0.1) { ctx.fillStyle = 'rgba(255,255,255,' + (0.8 * (1 - t / 0.1)) + ')'; ctx.fillRect(0, 0, W, H); }
   }
   function bar(x, y, w, h, frac, col, back) {
@@ -3697,7 +3698,7 @@
     var done=waves.filter(function(w){return w.done;}).length;
     var live=bosses.filter(function(b){return !b.dead&&!b.vs;});
     window.CreiaHUD.adventure(ctx,{players:players,names:NAMES,stage:stage,place:place(stage),wave:Math.min(waves.length,done+(wave?1:0)||1),waves:waves.length,score:pad(score),hi:pad(saved.hi),combo:combo,mult:mult(),bossOn:bossOn,bosses:bossIntro?[]:live},function(who,x,y){spr('drawPortrait',ctx,who,x,y);});
-    if (bannerT > 0 && !paused && !cine && !kissFocus() && !petFocus() && !soloFocus() && !readFocus() && !shoutFocus() && !auraFocus() && !stareFocus() && !cardosoFocus() && !pigFocus() && !coramFocus() && Math.floor(bannerT * 6) % 6) {
+    if (bannerT > 0 && !paused && !cine && !kissFocus() && !petFocus() && !soloFocus() && !shoutFocus() && !auraFocus() && !stareFocus() && !cardosoFocus() && !pigFocus() && !coramFocus() && Math.floor(bannerT * 6) % 6) {
       if (versus) {
         txt('X1!', 240, 96, '#ff4d4d', 'center', 16);
         txt(NAMES[players[0].who] + ' VS ' + NAMES[players[1].who], 240, 120, '#ffe066', 'center');
@@ -3710,7 +3711,7 @@
         txt('BANGU, RIO DE JANEIRO', 240, 128, '#9fe0d0', 'center');
       }
     }
-    if (goT > 0 && !stareFocus() && !cardosoFocus() && !pigFocus() && !coramFocus() && !shoutFocus() && !auraFocus() && !readFocus() && Math.floor(goT * 4) % 2) txt('VAI! >>', 470, 120, '#ffe066', 'right', 16);
+    if (goT > 0 && !stareFocus() && !cardosoFocus() && !pigFocus() && !coramFocus() && !shoutFocus() && !auraFocus() && Math.floor(goT * 4) % 2) txt('VAI! >>', 470, 120, '#ffe066', 'right', 16);
     if (phase === 'clear') {
       txt('FASE CONCLUÍDA!', 240, 100, '#7dff8a', 'center', 16);
       if (stage < 10) txt('PRÓXIMA: FASE ' + (stage + 1), 240, 124, '#ffffff', 'center');
@@ -4139,7 +4140,8 @@
       cine:cine ? [players.indexOf(cine.p),cine.t] : null,
       spFreeze:!!(cine || specialHighlight()),
       flashT:flashT,shakeT:shakeT,shakeF:shakeF,bannerT:bannerT,goT:goT,
-      shots:shots.slice(-30).map(function (s) { return [Math.round(s.x),Math.round(s.y),Math.round(s.z),s.k||'brilho',s.rot||0,
+      laminas:emanuellyBlades(),
+      shots:shots.filter(function(s){return !s.manuLamina;}).slice(-30).map(function (s) { return [Math.round(s.x),Math.round(s.y),Math.round(s.z),s.k||'brilho',s.rot||0,
         s.grav||0,!!s.yoyo,players.indexOf(s.owner),!!s.wave,s.life||0,s.vx||0,s.ch||'',s.col||'',!!s.enzoRain]; }),
       parts:parts.slice(-70).map(function (p) { return [p.kind,Math.round(p.x),Math.round(p.y),Math.round(p.z),p.rot||0,p.life,p.max]; }),
       texts:texts.slice(-12).map(function (t) { return [Math.round(t.x),Math.round(t.y),t.msg,t.col,t.life]; }),
@@ -4243,13 +4245,13 @@
     var cdBefore=p.cd,altBefore=p.altCd;
     if(a.who==='th' && (c.atk||c.alt) && p.cd<=0 && free)p.thPhone=!!c.alt;
     if(a.who==='enzo' && (c.atk||c.alt) && p.cd<=0 && free)p.enzoThree=!!c.alt;
-    if((a.who==='pedro' || a.who==='bispo' || a.who==='rafinha' || a.who==='enzo' || a.who==='lohan' || a.who==='grazi' || a.who==='th' || a.who==='douglinhas') && c.atk && p.cd<=0 && p.z>0 && free) { p.airThrowT=0.2; p.cd=window.CreiaCombat.primaryCooldown(a.who,!online.coop); }
+    if((a.who==='emanuelly' || a.who==='pedro' || a.who==='bispo' || a.who==='rafinha' || a.who==='enzo' || a.who==='lohan' || a.who==='grazi' || a.who==='th' || a.who==='douglinhas') && c.atk && p.cd<=0 && p.z>0 && free) { p.airThrowT=0.2; p.cd=window.CreiaCombat.primaryCooldown(a.who,!online.coop); }
     if(a.who==='ricardo'&&free){if(c.alt&&p.altCd<=0&&p.z===0){p.state='roll';p.st=0;p.actionT=0.55;p.altCd=window.CreiaCombat.secondaryCooldown(a.who,!online.coop);}else if(c.atk&&p.cd<=0){p.state='attack1';p.st=0;p.actionT=0.36;p.cd=window.CreiaCombat.primaryCooldown(a.who,!online.coop);}}
     if (a.who!=='ricardo' && ((c.atk&&p.cd<=0)||(c.alt&&p.altCd<=0&&!(a.who==='fidelis'&&p.z>0))) && (p.state==='idle'||p.state==='walk'||p.state==='throw'&&a.who!=='fidelis'||a.who==='fidelis'&&p.state==='jump')) {
       var close=Math.abs(a.x-s.players[0].x)<48 && Math.abs(a.y-s.players[0].y)<16;
       p.state=c.alt ? (a.who==='cardoso'?'barriga':a.who==='lucas'?'fralda':'attack2') :
-        (a.who==='fidelis'?'throw':a.who==='lutador'||a.who==='cardoso'||close?'attack1':'throw');
-      p.st=0; p.actionT=a.who==='fidelis'?(c.alt?.58:window.CreiaCombat.fidelis.throwDuration):a.who==='pedro'&&c.alt?.34:p.state==='throw'?0.2:0.3;if(c.alt)p.altCd=window.CreiaCombat.secondaryCooldown(a.who,!online.coop);else p.cd=window.CreiaCombat.primaryCooldown(a.who,!online.coop);
+        (a.who==='fidelis'||a.who==='emanuelly'?'throw':a.who==='lutador'||a.who==='cardoso'||close?'attack1':'throw');
+      p.st=0; p.actionT=a.who==='fidelis'?(c.alt?.58:window.CreiaCombat.fidelis.throwDuration):a.who==='emanuelly'&&c.alt?window.CreiaCombat.emanuelly.secondaryDuration:a.who==='pedro'&&c.alt?.34:p.state==='throw'?0.2:0.3;if(c.alt)p.altCd=window.CreiaCombat.secondaryCooldown(a.who,!online.coop);else p.cd=window.CreiaCombat.primaryCooldown(a.who,!online.coop);
     }
     if(p.cd>cdBefore||p.altCd>altBefore){
       var hadCounter=p.contraT>0;armCounter(p);
@@ -4356,6 +4358,7 @@
       players.forEach(function (p,i) { p.kissTarget=players[state.players[i].kissTarget]||null; });
       shots=(state.shots||[]).map(function (s) { return {x:s[0],y:s[1],z:s[2],k:s[3],rot:s[4],grav:s[5],
         yoyo:s[6],owner:players[s[7]]||players[0],wave:s[8],life:s[9],vx:s[10],ch:s[11],col:s[12],enzoRain:!!s[13]}; });
+      shots=shots.concat((state.laminas||[]).map(function(s){return Object.assign({},s,{k:'manu-lamina',manuShot:true,manuLamina:true,owner:players[s.owner]||players[0],rot:0,grav:0});}));
       parts=(state.parts||[]).map(function (p) { return {kind:p[0],x:p[1],y:p[2],z:p[3],rot:p[4],life:p[5],max:p[6]}; });
       texts=(state.texts||[]).map(function (t) { return {x:t[0],y:t[1],msg:t[2],col:t[3],life:t[4]}; });
       bolts=(state.bolts||[]).map(function (v) { return {x0:v[0],y0:v[1],x1:v[2],y1:v[3],col:v[4]}; });
@@ -4464,7 +4467,7 @@
   var ROSTER = [
     { who: 'nutri', job: 'NUTRICIONISTA', arma: 'FRUTAS E XÍCARA DE CAFÉ', esp: 'RESTRIÇÃO ALIMENTAR, LOW CARB!' },
     { who: 'lutador', job: 'LUTADOR', arma: 'MUAY THAI E HALTER', esp: 'SOLO DE GUITARRA' },
-    { who: 'emanuelly', job: 'ESTUDANTE', arma: 'LAPIS, CANETA, BORRACHA', esp: 'REDACAO NOTA MIL' },
+    { who: 'emanuelly', job: 'ESTUDANTE', arma: 'CONSOLE E INVOCADOS', esp: 'CHUVA DE LÂMINAS' },
     { who: 'enzo', job: 'BASQUETE E MUSICA', arma: 'BOLAS DE BASQUETE', esp: 'CHUVA DE BASQUETE' },
     { who: 'pedro', job: 'TECLADISTA', arma: 'TECLADO DE SEMINIMAS', esp: 'HARMONIA BIZARRAMENTE TORTA' },
     { who: 'naju', job: 'CANTORA', arma: 'MICROFONE NO FIO', esp: 'GRITO NO MICROFONE' },
@@ -5438,7 +5441,7 @@
       versus: function (a,b) { startTeam([{who:a,ctl:0},{who:b,ctl:1}],false,true); vsRound.phase='intro'; }
     },
     get state() { return { scene: scene, stage: stage, phase: phase, cam: cam, bossOn: bossOn, players: players, enemies: enemies, bosses: bosses,
-      cat:cat,camLock:camLock,waves:waves,shots: shots, eshots: eshots, parts: parts, round: vsRound, score: score }; },
+      cat:cat,camLock:camLock,waves:waves,laminas:emanuellyBlades(),shots: shots, eshots: eshots, parts: parts, round: vsRound, score: score }; },
     start: function (mode, s) { saved.tut = true;   // testes: pula o tutorial
       startGame(mode || 0); if(s && s!==1)startStage(clamp(s,1,10)); },
     nearBoss: function () { waves.forEach(function (w) { w.done = true; }); wave = null; camLock = null; enemies = []; cam = CAM_MAX - 420; players.forEach(function (p, i) { p.x = cam + 200 - i * 30; }); },

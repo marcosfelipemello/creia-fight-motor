@@ -4,8 +4,8 @@
   'use strict';
   var TAU = Math.PI * 2, DURATION = 3.4;
   var CARBS = ['pao', 'pizza', 'fritas', 'refri', 'donut'], GREENS = ['folha', 'cenoura', 'maca', 'folha', 'brocolis'];
-  // pontos medidos nas artes (assets/lorrany, 360x465)
-  var APPLE = { x: 213, y: 92, r: 13 }, CLAW = { x: 305, y: 118 };
+  // pontos medidos nas artes v3 (assets/lorrany, 360x465): a maçã já mordida e o centro da prancheta, para onde a vida é puxada
+  var APPLE = { x: 208, y: 150, r: 20 }, CLAW = { x: 190, y: 210 };
   function clamp(n, a, b) { return Math.max(a, Math.min(b, n)); }
   function ease(a, b, t) { var u = clamp((t - a) / (b - a), 0, 1); return u * u * (3 - 2 * u); }
   function backOut(u) { u = clamp(u, 0, 1); var c = 2.4; return 1 + (c + 1) * Math.pow(u - 1, 3) + c * Math.pow(u - 1, 2); }
@@ -116,7 +116,7 @@
       var dx = W * 0.3 - (APPLE.x - cx0) * zoom + (APPLE.x - cx0 - cw / 2) * zoom * 0.25, dy = H * 0.43 - (APPLE.y - cy0) * zoom + 14;
       var drawn = io && io.img && shot(c, io.img('maca'), cx0, cy0, cw, ch, dx, dy, zoom);
       var ax = dx + (APPLE.x - cx0) * zoom, ay = dy + (APPLE.y - cy0) * zoom;
-      if (drawn && t > bite) {   // marca da mordida na maçã
+      if (drawn && t > bite && io.marcarMordida) {   // a arte v3 já traz a maçã mordida; a marca desenhada só com io.marcarMordida
         c.save(); c.beginPath(); c.arc(ax, ay, APPLE.r * zoom, 0, TAU); c.clip();
         circle(c, '#3a1206', ax - APPLE.r * zoom * 0.85, ay - APPLE.r * zoom * 0.35, APPLE.r * zoom * 0.55);
         circle(c, '#f3e6c4', ax - APPLE.r * zoom * 0.9, ay - APPLE.r * zoom * 0.35, APPLE.r * zoom * 0.47);
@@ -165,7 +165,7 @@
       g2.addColorStop(0, '#5a1430'); g2.addColorStop(0.5, '#2a0818'); g2.addColorStop(1, '#08020a');
       c.fillStyle = g2; c.fillRect(-10, -10, W + 20, H + 20);
       for (var v = 0; v < 22; v++) { var vy2 = (v * 37) % H, vl = 30 + (v * 53) % 90, vx2 = W - ((v * 97 + (t - swap) * 700) % (W + 160)); rect(c, 'rgba(255,90,110,0.35)', vx2, vy2, vl, v % 3 ? 1 : 2); }
-      var z2 = 1.25 + ease(swap, DURATION, t) * 0.18, gx0 = 60, gy0 = 0, gw = 290, gh = 260;
+      var z2 = 1.25 + ease(swap, DURATION, t) * 0.18, gx0 = 60, gy0 = 50, gw = 290, gh = 260;
       var gdx = W * 0.3 - (CLAW.x - gx0) * z2 * 0.55, gdy = 6 - (1 - ease(swap, swap + 0.25, t)) * 20;
       if (io && io.img) shot(c, io.img('garra'), gx0, gy0, gw, gh, gdx, gdy, z2);
       var hx = gdx + (CLAW.x - gx0) * z2, hy = gdy + (CLAW.y - gy0) * z2, pull = ease(swap + 0.15, swap + 0.4, t);

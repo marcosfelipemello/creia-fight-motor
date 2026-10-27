@@ -1,5 +1,5 @@
 // Service worker do Creia Fight: rede primeiro (sempre a versão nova quando há internet), cache como reserva para jogar offline.
-var CACHE = 'creia-fight-v31';
+var CACHE = 'creia-fight-v32';
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(['./', 'index.html', 'manifest.webmanifest']); }).then(function () { return self.skipWaiting(); }));
 });

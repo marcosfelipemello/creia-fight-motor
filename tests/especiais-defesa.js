@@ -234,8 +234,8 @@ c6.tick(1);
 assert.notEqual(lu6.state, 'guard', 'Oponente NÃO PODE conseguir defender durante os hits do especial!');
 assert.equal(lu6.spLocked, true, 'Oponente deve continuar travado enquanto os hits acontecem!');
 
-// Avança até terminar todas as letras
-for (let f = 0; f < 120; f++) {
+// Emanuelly v2: aguarda a cena e a última lâmina, sem pressupor o tempo da chuva antiga.
+for (let f = 0; f < 600 && lu6.spLocked; f++) {
   c6.tick(1);
   // Garante que durante todo o tempo de hits, o oponente não consegue levantar a guarda
   if (lu6.spLocked) assert.notEqual(lu6.state, "guard", "Oponente não pode levantar guarda enquanto o especial estiver ativo");
